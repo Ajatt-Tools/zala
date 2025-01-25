@@ -27,6 +27,8 @@ dependencies = [
     "PyQt6>=6.8.0",
     "pillow>=11.1.0",
     "pynput>=1.7.7",
+    "fire>=0.7.0",
+    "loguru",
 ]
 
 [project.urls]

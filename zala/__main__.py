@@ -3,67 +3,24 @@ Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
+import itertools
+import pathlib
 import sys
-from typing import Sequence
+import time
 
 import fire
-from PyQt6.QtGui import QPixmap, QCursor, QScreen
 from PyQt6.QtWidgets import QApplication
-from loguru import logger
+
+from zala.screenshot import ZalaException, repr_screen, ZalaScreenshot
 
 
-
-def repr_screen(screen: QScreen) -> str:
-    geometry = screen.geometry()
-    top_left = geometry.topLeft()
-    size = geometry.size()
-    return f"Name {screen.name()}. Position {top_left.x(), top_left.y()}. Size {size.width()}x{size.height()}."
-
-
-def debug_screens(screens: Sequence[QScreen]) -> None:
-    logger.debug(f"Found {len(screens)} screens.")
-    for idx, screen in enumerate(screens):
-        logger.debug(f"Screen #{idx}. {repr_screen(screen)}")
-
-
-def grab_window(screen: QScreen) -> QPixmap:
-    return screen.grabWindow(x=0, y=0).scaled(screen.geometry().size())
-
-
-def find_screen_with_cursor(screens: Sequence[QScreen]) -> QScreen:
-    cursor = QCursor.pos()  # Get the current position of the cursor
-    # Iterate through the screens to find which one contains the cursor position
-    for screen in screens:
-        if screen.geometry().contains(cursor):
-            return screen
-    raise RuntimeError("couldn't find active screen.")
-
-
-class ZalaScreenshot:
-    """
-    Take screenshots.
-    """
-
-    _app: QApplication
-
-    def __init__(self, app: QApplication) -> None:
-        self._app = app
-
-    def find_available_screens(self) -> list[QScreen]:
-        return self._app.screens()
-
-    def capture_screen(self, index: int | None) -> QPixmap:
-        screens = self.find_available_screens()
-        debug_screens(screens)
-        try:
-            target_screen = screens[index]
-        except IndexError as e:
-            raise ZalaException(f"screen #{index} does not exist") from e
-        except TypeError:
-            target_screen = find_screen_with_cursor(screens)
-        pixmap = grab_window(target_screen)
-        logger.debug(f"Screenshot taken. {repr_screen(target_screen)}")
-        return pixmap
+def generate_output_file_path() -> pathlib.Path:
+    if not pathlib.Path.home().is_dir():
+        raise ZalaException("home directory doesn't exist")
+    for idx in itertools.count(start=int(time.time())):
+        path = pathlib.Path.home().joinpath(f"screenshot_{idx}.png")
+        if not path.is_file():
+            return path
 
 
 class CLI:
@@ -80,27 +37,32 @@ class CLI:
         for idx, screen in enumerate(scr.find_available_screens()):
             print(f"Screen {idx}. {repr_screen(screen)}")
 
-    def take_screen(self, number: int | None = None):
+    def take_screen(self, number: int | None = None, output_file_path: str | None = None):
         """
         Capture screen.
         Args:
             number: Screen number.
+            output_file_path: File path where the file will be saved.
         """
         app = QApplication(sys.argv)
         scr = ZalaScreenshot(app)
         pixmap = scr.capture_screen(number)
-        pixmap.save("/tmp/screen.png")
+        output_file_path = pathlib.Path(output_file_path) if output_file_path else generate_output_file_path()
+        if pixmap.save(str(output_file_path)):
+            print(f"Screenshot saved to {output_file_path}")
+        else:
+            print(f"Failed to save screenshot to {output_file_path}")
 
     def select(self):
+        """
+        Enables an interactive selection mode
+        where you may select the desired region before a screenshot is captured.
+        """
         raise NotImplementedError
         # app = QApplication(sys.argv)
         # window = ZalaApp()
         # window.showFullScreen()
         # app.exit(app.exec())
-
-
-class ZalaException(Exception):
-    pass
 
 
 def main():
