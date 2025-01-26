@@ -1,3 +1,4 @@
+import typing
 from typing import Sequence
 
 from PyQt6.QtGui import QScreen, QPixmap, QCursor
@@ -29,11 +30,16 @@ def grab_window(screen: QScreen) -> QPixmap:
 def find_screen_with_cursor(screens: Sequence[QScreen]) -> QScreen:
     cursor = QCursor.pos()  # Get the current position of the cursor
     # Iterate through the screens to find which one contains the cursor position
+    logger.debug(f"Cursor is at {cursor.x(), cursor.y()}.")
     for screen in screens:
         if screen.geometry().contains(cursor):
             return screen
     raise RuntimeError("couldn't find active screen.")
 
+
+class TakenScreenshot(typing.NamedTuple):
+    pixmap: QPixmap
+    screen: QScreen
 
 class ZalaScreenshot:
     """
@@ -48,7 +54,7 @@ class ZalaScreenshot:
     def find_available_screens(self) -> list[QScreen]:
         return self._app.screens()
 
-    def capture_screen(self, index: int | None) -> QPixmap:
+    def capture_screen(self, index: int | None = None) -> TakenScreenshot:
         screens = self.find_available_screens()
         debug_screens(screens)
         try:
@@ -58,5 +64,5 @@ class ZalaScreenshot:
         except IndexError as e:
             raise ZalaException(f"screen #{index} does not exist") from e
         pixmap = grab_window(target_screen)
-        logger.debug(f"Screenshot taken. {repr_screen(target_screen)}")
-        return pixmap
+        logger.debug(f"Screen {target_screen.name()} taken.")
+        return TakenScreenshot(pixmap, target_screen)

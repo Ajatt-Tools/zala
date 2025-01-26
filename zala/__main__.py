@@ -9,8 +9,9 @@ import sys
 import time
 
 import fire
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QMainWindow
 
+from zala.main_window import ZalaSelect
 from zala.screenshot import ZalaException, repr_screen, ZalaScreenshot
 
 
@@ -28,13 +29,18 @@ class CLI:
     Screenshot taking app in PyQt.
     """
 
+    _app: QApplication
+    _scr: ZalaScreenshot
+
+    def __init__(self) -> None:
+        self._app = QApplication(sys.argv)
+        self._scr = ZalaScreenshot(self._app)
+
     def screens(self) -> None:
         """
         List available screens.
         """
-        app = QApplication(sys.argv)
-        scr = ZalaScreenshot(app)
-        for idx, screen in enumerate(scr.find_available_screens()):
+        for idx, screen in enumerate(self._scr.find_available_screens()):
             print(f"Screen {idx}. {repr_screen(screen)}")
 
     def take_screen(self, number: int | None = None, output_file_path: str | None = None):
@@ -44,25 +50,21 @@ class CLI:
             number: Screen number.
             output_file_path: File path where the file will be saved.
         """
-        app = QApplication(sys.argv)
-        scr = ZalaScreenshot(app)
-        pixmap = scr.capture_screen(number)
+        taken = self._scr.capture_screen(number)
         output_file_path = pathlib.Path(output_file_path) if output_file_path else generate_output_file_path()
-        if pixmap.save(str(output_file_path)):
-            print(f"Screenshot saved to {output_file_path}")
+        if taken.pixmap.save(str(output_file_path)):
+            print(f"Screen {taken.screen.name()} saved to {output_file_path}")
         else:
-            print(f"Failed to save screenshot to {output_file_path}")
+            print(f"Failed to save screen {taken.screen.name()} to {output_file_path}")
 
     def select(self):
         """
         Enables an interactive selection mode
         where you may select the desired region before a screenshot is captured.
         """
-        raise NotImplementedError
-        # app = QApplication(sys.argv)
-        # window = ZalaApp()
-        # window.showFullScreen()
-        # app.exit(app.exec())
+        window = ZalaSelect(self._scr)
+        window.showFullScreen()
+        self._app.exit(self._app.exec())
 
 
 def main():
