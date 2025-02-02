@@ -1,5 +1,10 @@
+"""
+Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
+License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+"""
+
 import typing
-from typing import Sequence
+from collections.abc import Sequence
 
 from PyQt6.QtGui import QScreen, QPixmap, QCursor
 from PyQt6.QtWidgets import QApplication
@@ -40,6 +45,7 @@ def find_screen_with_cursor(screens: Sequence[QScreen]) -> QScreen:
 class TakenScreenshot(typing.NamedTuple):
     pixmap: QPixmap
     screen: QScreen
+
 
 class ZalaScreenshot:
     """
