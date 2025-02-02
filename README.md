@@ -1,3 +1,7 @@
+<p align="center">
+<img height="100px" src="doc/logo.svg" alt="Project logo">
+</p>
+
 ## Overview
 
 Zala is a screenshot tool designed to capture images of your desktop.
