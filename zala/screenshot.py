@@ -6,9 +6,9 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import typing
 from collections.abc import Sequence
 
-from PyQt6.QtGui import QScreen, QPixmap, QCursor
-from PyQt6.QtWidgets import QApplication
 from loguru import logger
+from PyQt6.QtGui import QCursor, QPixmap, QScreen
+from PyQt6.QtWidgets import QApplication
 
 
 class ZalaException(Exception):

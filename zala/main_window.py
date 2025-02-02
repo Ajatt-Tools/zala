@@ -3,25 +3,37 @@ Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
-from PyQt6.QtCore import Qt, QRectF, QMargins, QPointF, QSize, QRect, pyqtSignal
-from PyQt6.QtGui import QColor, QBrush, QPixmap, QPen, QPainter, QMouseEvent, QCloseEvent
+from loguru import logger
+from PyQt6.QtCore import QMargins, QPointF, QRect, QRectF, QSize, Qt, pyqtSignal
+from PyQt6.QtGui import (
+    QBrush,
+    QCloseEvent,
+    QColor,
+    QMouseEvent,
+    QPainter,
+    QPen,
+    QPixmap,
+)
 from PyQt6.QtWidgets import (
+    QApplication,
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QGraphicsView,
     QMainWindow,
     QWidget,
-    QGraphicsView,
-    QGraphicsScene,
-    QGraphicsRectItem,
-    QApplication,
 )
 
 from zala.consts import APP_NAME
 from zala.rubber_band import UserSelectionRubberBand
-from zala.screenshot import ZalaScreenshot, TakenScreenshot, ZalaException
+from zala.screenshot import TakenScreenshot, ZalaException, ZalaScreenshot
 from zala.utils import q_emit, qconnect
 
 
 def add_border(
-    scene: QGraphicsScene, box_size: QSize, thickness: int = 2, outline_color: QColor = QColor(255, 0, 0)
+    scene: QGraphicsScene,
+    box_size: QSize,
+    border_thickness: int = 2,
+    outline_color: QColor = QColor(255, 0, 0),
 ) -> QGraphicsRectItem:
     # Reference: https://doc.qt.io/qt-6/qbrush.html#details
     fill_brush = QBrush()
@@ -34,12 +46,12 @@ def add_border(
     # Reference: https://doc.qt.io/qt-6/qt.html#PenJoinStyle-enum
     outline_pen.setJoinStyle(Qt.PenJoinStyle.MiterJoin)
     outline_pen.setColor(outline_color)
-    outline_pen.setWidth(thickness)
+    outline_pen.setWidth(border_thickness)
 
     return scene.addRect(
         QRectF(
-            QPointF(thickness / 2, thickness / 2),
-            box_size.shrunkBy(QMargins(0, 0, thickness, thickness)).toSizeF(),
+            QPointF(border_thickness / 2, border_thickness / 2),
+            box_size.shrunkBy(QMargins(0, 0, border_thickness, border_thickness)).toSizeF(),
         ),
         outline_pen,
         fill_brush,
@@ -72,7 +84,7 @@ class ScreenshotPreview(QGraphicsView):
         # Draw scene
         self._scene.addPixmap(self._screen_pixmap)
         self.setSceneRect(self._screen_pixmap.rect().toRectF())
-        add_border(self._scene, box_size=self._screen_pixmap.size(), thickness=2)
+        add_border(self._scene, box_size=self._screen_pixmap.size(), border_thickness=2)
 
     # Reference: https://doc.qt.io/qt-6/qrubberband.html#details
 
@@ -141,17 +153,20 @@ class ZalaSelect(QMainWindow):
         self.setMinimumSize(320, 240)
 
     def showFullScreen(self):
+        logger.debug("Zala window is opening.")
         QApplication.setOverrideCursor(Qt.CursorShape.CrossCursor)
         geometry = self._taken.screen.geometry()
         self.move(geometry.topLeft())
         self.resize(geometry.size())
         return super().showFullScreen()
 
-    def closeEvent(self, event: QCloseEvent):
+    def closeEvent(self, event: QCloseEvent) -> None:
+        logger.debug("Zala window is closing.")
         # Restore cursor
         QApplication.restoreOverrideCursor()
         return super().closeEvent(event)
 
     def _handle_selection_finished(self, selection: QRect) -> bool:
+        logger.debug("Region selection finished.")
         self._user_selected = self._taken.pixmap.copy(selection)
         return self.close()
