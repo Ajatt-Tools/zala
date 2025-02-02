@@ -11,14 +11,13 @@ from PyQt6.QtWidgets import (
     QGraphicsView,
     QGraphicsScene,
     QGraphicsRectItem,
-    QPushButton,
-    QRubberBand,
     QApplication,
 )
 
 from zala.consts import APP_NAME
 from zala.rubber_band import UserSelectionRubberBand
-from zala.screenshot import ZalaScreenshot, TakenScreenshot
+from zala.screenshot import ZalaScreenshot, TakenScreenshot, ZalaException
+from zala.utils import q_emit, qconnect
 
 
 def add_border(
@@ -93,7 +92,7 @@ class ScreenshotPreview(QGraphicsView):
         if event.button() == Qt.MouseButton.LeftButton:
             self._rubber_band.set_selection_end(event.pos())
             self._rubber_band.hide()
-            self.selection_finished.emit(self._rubber_band.geometry())
+            q_emit(self.selection_finished, self._rubber_band.geometry())
         return super().mouseReleaseEvent(event)
 
 
@@ -114,12 +113,12 @@ class ZalaSelect(QMainWindow):
         self._init_ui()
         self._preview = ScreenshotPreview(screen_pixmap=self._taken.pixmap, parent=self)
         self.setCentralWidget(self._preview)
-        self._preview.selection_finished.connect(self.handle_selection_finished)
+        qconnect(self._preview.selection_finished, self._handle_selection_finished)
 
     @property
     def user_selection(self) -> QPixmap:
         if self._user_selected is None:
-            raise RuntimeError("user selection is empty")
+            raise ZalaException("user selection is empty")
         return self._user_selected
 
     def _set_fullscreen_settings(self):
@@ -153,6 +152,6 @@ class ZalaSelect(QMainWindow):
         QApplication.restoreOverrideCursor()
         return super().closeEvent(event)
 
-    def handle_selection_finished(self, selection: QRect) -> bool:
+    def _handle_selection_finished(self, selection: QRect) -> bool:
         self._user_selected = self._taken.pixmap.copy(selection)
         return self.close()
