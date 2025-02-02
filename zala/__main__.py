@@ -43,7 +43,7 @@ class CLI:
         for idx, screen in enumerate(self._scr.find_available_screens()):
             print(f"Screen {idx}. {repr_screen(screen)}")
 
-    def take_screen(self, number: int | None = None, output_file_path: str | None = None):
+    def take_screen(self, number: int | None = None, output_file_path: str | None = None) -> None:
         """
         Capture screen.
         Args:
