@@ -9,6 +9,7 @@ from PyQt6.QtGui import (
     QBrush,
     QCloseEvent,
     QColor,
+    QKeyEvent,
     QMouseEvent,
     QPainter,
     QPen,
@@ -68,6 +69,7 @@ class ScreenshotPreview(QGraphicsView):
     _rubber_band: UserSelectionRubberBand
 
     selection_finished = pyqtSignal(QRect)
+    selection_aborted = pyqtSignal()
 
     def __init__(self, screen_pixmap: QPixmap, parent: QWidget | None = None):
         super().__init__(parent)
@@ -85,6 +87,17 @@ class ScreenshotPreview(QGraphicsView):
         self._scene.addPixmap(self._screen_pixmap)
         self.setSceneRect(self._screen_pixmap.rect().toRectF())
         add_border(self._scene, box_size=self._screen_pixmap.size(), border_thickness=2)
+
+    # Reference: https://doc.qt.io/qt-6/qwidget.html#keyPressEvent
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        """
+        Key is pressed, but not released.
+        Doesn't work when app is in background.
+        """
+        if event.key() == Qt.Key.Key_Escape:
+            q_emit(self.selection_aborted)
+        return super().keyPressEvent(event)
 
     # Reference: https://doc.qt.io/qt-6/qrubberband.html#details
 
@@ -126,6 +139,7 @@ class ZalaSelect(QMainWindow):
         self._preview = ScreenshotPreview(screen_pixmap=self._taken.pixmap, parent=self)
         self.setCentralWidget(self._preview)
         qconnect(self._preview.selection_finished, self._handle_selection_finished)
+        qconnect(self._preview.selection_aborted, self._handle_selection_aborted)
 
     @property
     def user_selection(self) -> QPixmap:
@@ -169,4 +183,8 @@ class ZalaSelect(QMainWindow):
     def _handle_selection_finished(self, selection: QRect) -> bool:
         logger.debug("Region selection finished.")
         self._user_selected = self._taken.pixmap.copy(selection)
-        return self.close()
+        return self.close()  # self.closeEvent() will fire.
+
+    def _handle_selection_aborted(self) -> bool:
+        logger.debug("Region selection aborted.")
+        return self.close()  # self.closeEvent() will fire.
