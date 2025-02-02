@@ -4,6 +4,8 @@
 
 ## Overview
 
+<img align="right" height="100px" src="https://github.com/user-attachments/assets/eed00245-984a-4d68-a53b-5ed384dc1cc1" alt="ZALA Z-16">
+
 Zala is a screenshot tool designed to capture images of your desktop.
 It has options to capture a specific region of the screen.
 Built using PyQt,
