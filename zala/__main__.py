@@ -27,6 +27,16 @@ def generate_output_file_path() -> pathlib.Path:
             return path
 
 
+class ScreenshotSaveResult(typing.NamedTuple):
+    success: bool
+    file_path: pathlib.Path
+
+
+def save_screenshot(pixmap: QPixmap, output_file_path: str | None) -> ScreenshotSaveResult:
+    output_file_path = pathlib.Path(output_file_path) if output_file_path else generate_output_file_path()
+    return ScreenshotSaveResult(pixmap.save(str(output_file_path)), output_file_path)
+
+
 def set_logger(verbose: bool) -> None:
     # Replace the default handler with a new one.
     logger.remove()
@@ -62,20 +72,34 @@ class CLI:
             output_file_path: File path where the file will be saved.
         """
         taken = self._scr.capture_screen(number)
-        output_file_path = pathlib.Path(output_file_path) if output_file_path else generate_output_file_path()
-        if taken.pixmap.save(str(output_file_path)):
-            print(f"Screen {taken.screen.name()} saved to {output_file_path}")
+        result = save_screenshot(taken.pixmap, output_file_path)
+        if result.success:
+            print(f"Screen {taken.screen.name()} saved to {result.file_path}")
         else:
-            print(f"Failed to save screen {taken.screen.name()} to {output_file_path}")
+            print(f"Failed to save screen {taken.screen.name()} to {result.file_path}")
 
-    def select(self):
+    def select(self, output_file_path: str | None = None) -> None:
         """
         Enables an interactive selection mode
         where you may select the desired region before a screenshot is captured.
+        Args:
+            output_file_path: File path where the file will be saved.
         """
         window = ZalaSelect(self._scr)
         window.showFullScreen()
-        self._app.exit(self._app.exec())
+        exit_code = self._app.exec()
+        try:
+            pixmap = window.user_selection
+        except ZalaException:
+            exit_code = 1
+            print("Selection aborted")
+        else:
+            result = save_screenshot(pixmap, output_file_path)
+            if result.success:
+                print(f"Selection saved to {result.file_path}")
+            else:
+                print(f"Failed to save selection to {result.file_path}")
+        self._app.exit(exit_code)
 
 
 def main():
@@ -83,6 +107,7 @@ def main():
         fire.Fire(CLI)
     except ZalaException as e:
         print(f"Error: {e}.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
