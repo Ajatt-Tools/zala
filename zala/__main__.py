@@ -3,28 +3,18 @@ Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
-import itertools
 import pathlib
 import sys
-import time
 import typing
 
 import fire
+from loguru import logger
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QApplication
-from loguru import logger
 
 from zala.main_window import ZalaSelect
-from zala.screenshot import ZalaException, repr_screen, ZalaScreenshot
-
-
-def generate_output_file_path() -> pathlib.Path:
-    if not pathlib.Path.home().is_dir():
-        raise ZalaException("home directory doesn't exist")
-    for idx in itertools.count(start=int(time.time())):
-        path = pathlib.Path.home().joinpath(f"screenshot_{idx}.png")
-        if not path.is_file():
-            return path
+from zala.screenshot import ZalaException, ZalaScreenshot, repr_screen
+from zala.utils import generate_output_file_path
 
 
 class ScreenshotSaveResult(typing.NamedTuple):
