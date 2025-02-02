@@ -7,9 +7,12 @@ import itertools
 import pathlib
 import sys
 import time
+import typing
 
 import fire
-from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QApplication
+from loguru import logger
 
 from zala.main_window import ZalaSelect
 from zala.screenshot import ZalaException, repr_screen, ZalaScreenshot
@@ -24,6 +27,13 @@ def generate_output_file_path() -> pathlib.Path:
             return path
 
 
+def set_logger(verbose: bool) -> None:
+    # Replace the default handler with a new one.
+    logger.remove()
+    level = "DEBUG" if verbose else "INFO"
+    logger.add(sys.stderr, level=level)
+
+
 class CLI:
     """
     Screenshot taking app in PyQt.
@@ -32,9 +42,10 @@ class CLI:
     _app: QApplication
     _scr: ZalaScreenshot
 
-    def __init__(self) -> None:
+    def __init__(self, verbose: bool = False) -> None:
         self._app = QApplication(sys.argv)
         self._scr = ZalaScreenshot(self._app)
+        set_logger(verbose)
 
     def screens(self) -> None:
         """
