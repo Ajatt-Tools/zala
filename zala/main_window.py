@@ -128,6 +128,7 @@ class ZalaSelect(QMainWindow):
 
     _taken: TakenScreenshot
     _user_selected: QPixmap | None = None
+    _min_selection_size: QSize = QSize(10, 10)
 
     def __init__(self, scr: ZalaScreenshot, parent=None):
         super().__init__(parent)
@@ -182,7 +183,13 @@ class ZalaSelect(QMainWindow):
 
     def _handle_selection_finished(self, selection: QRect) -> bool:
         logger.debug("Region selection finished.")
-        self._user_selected = self._taken.pixmap.copy(selection)
+        if (
+            selection.width() >= self._min_selection_size.width()
+            and selection.height() >= self._min_selection_size.height()
+        ):
+            self._user_selected = self._taken.pixmap.copy(selection)
+        else:
+            logger.debug(f"Region is too small.")
         return self.close()  # self.closeEvent() will fire.
 
     def _handle_selection_aborted(self) -> bool:
