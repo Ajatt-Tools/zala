@@ -4,121 +4,20 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
 from loguru import logger
-from PyQt6.QtCore import QMargins, QPointF, QRect, QRectF, QSize, Qt, pyqtSignal
+from PyQt6.QtCore import QRect, QSize, Qt
 from PyQt6.QtGui import (
-    QBrush,
     QCloseEvent,
-    QColor,
-    QKeyEvent,
-    QMouseEvent,
-    QPainter,
-    QPen,
     QPixmap,
 )
 from PyQt6.QtWidgets import (
     QApplication,
-    QGraphicsRectItem,
-    QGraphicsScene,
-    QGraphicsView,
     QMainWindow,
-    QWidget,
 )
 
 from zala.consts import APP_NAME
-from zala.rubber_band import UserSelectionRubberBand
-from zala.screenshot import TakenScreenshot, ZalaException, ZalaScreenshot
-from zala.utils import q_emit, qconnect
-
-
-def add_border(
-    scene: QGraphicsScene,
-    box_size: QSize,
-    border_thickness: int = 2,
-    outline_color: QColor = QColor(255, 0, 0),
-) -> QGraphicsRectItem:
-    # Reference: https://doc.qt.io/qt-6/qbrush.html#details
-    fill_brush = QBrush()
-    fill_brush.setStyle(Qt.BrushStyle.Dense7Pattern)
-    fill_brush.setColor(QColor(127, 127, 127, 85))
-
-    outline_pen = QPen()
-    # Reference: https://doc.qt.io/qt-6/qt.html#PenStyle-enum
-    outline_pen.setStyle(Qt.PenStyle.SolidLine)
-    # Reference: https://doc.qt.io/qt-6/qt.html#PenJoinStyle-enum
-    outline_pen.setJoinStyle(Qt.PenJoinStyle.MiterJoin)
-    outline_pen.setColor(outline_color)
-    outline_pen.setWidth(border_thickness)
-
-    return scene.addRect(
-        QRectF(
-            QPointF(border_thickness / 2, border_thickness / 2),
-            box_size.shrunkBy(QMargins(0, 0, border_thickness, border_thickness)).toSizeF(),
-        ),
-        outline_pen,
-        fill_brush,
-    )
-
-
-class ScreenshotPreview(QGraphicsView):
-    """
-    Fullscreen view
-    """
-
-    _scene: QGraphicsScene
-    _screen_pixmap: QPixmap
-    _rubber_band: UserSelectionRubberBand
-
-    selection_finished = pyqtSignal(QRect)
-    selection_aborted = pyqtSignal()
-
-    def __init__(self, screen_pixmap: QPixmap, parent: QWidget | None = None):
-        super().__init__(parent)
-        # Assign member variables
-        self._screen_pixmap = screen_pixmap
-        self._scene = QGraphicsScene(self)
-        self._rubber_band = UserSelectionRubberBand(self)
-        # Set properties
-        self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setObjectName("main_window_contents")
-        self.setScene(self._scene)
-        # Draw scene
-        self._scene.addPixmap(self._screen_pixmap)
-        self.setSceneRect(self._screen_pixmap.rect().toRectF())
-        add_border(self._scene, box_size=self._screen_pixmap.size(), border_thickness=2)
-
-    # Reference: https://doc.qt.io/qt-6/qwidget.html#keyPressEvent
-
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        """
-        Key is pressed, but not released.
-        Doesn't work when app is in background.
-        """
-        if event.key() == Qt.Key.Key_Escape:
-            q_emit(self.selection_aborted)
-        return super().keyPressEvent(event)
-
-    # Reference: https://doc.qt.io/qt-6/qrubberband.html#details
-
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        if event.button() == Qt.MouseButton.LeftButton:
-            self._rubber_band.set_selection_start(event.pos())
-            self._rubber_band.show()
-        return super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        if event.buttons() & Qt.MouseButton.LeftButton:
-            self._rubber_band.set_selection_end(event.pos())
-            self._rubber_band.show()
-        return super().mouseMoveEvent(event)
-
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        if event.button() == Qt.MouseButton.LeftButton:
-            self._rubber_band.set_selection_end(event.pos())
-            self._rubber_band.hide()
-            q_emit(self.selection_finished, self._rubber_band.geometry())
-        return super().mouseReleaseEvent(event)
+from zala.screenshot import TakenScreenshot, ZalaException
+from zala.screenshot_preview import ScreenshotPreview
+from zala.utils import qconnect
 
 
 class ZalaSelect(QMainWindow):
@@ -130,11 +29,10 @@ class ZalaSelect(QMainWindow):
     _user_selected: QPixmap | None = None
     _min_selection_size: QSize = QSize(10, 10)
 
-    def __init__(self, scr: ZalaScreenshot, parent=None):
+    def __init__(self, screen: TakenScreenshot, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle(APP_NAME)
-        self._scr = scr
-        self._taken = self._scr.capture_screen()
+        self._taken = screen
         self._set_fullscreen_settings()
         self._init_ui()
         self._preview = ScreenshotPreview(screen_pixmap=self._taken.pixmap, parent=self)
