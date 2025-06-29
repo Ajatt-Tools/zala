@@ -75,7 +75,7 @@ class CLI:
         Args:
             output_file_path: File path where the file will be saved.
         """
-        window = ZalaSelect(self._scr)
+        window = ZalaSelect(self._scr.capture_screen())
         window.showFullScreen()
         exit_code = self._app.exec()
         try:
