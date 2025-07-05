@@ -10,7 +10,7 @@ from collections.abc import Callable
 
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal
 
-from zala.screenshot import ZalaException
+from zala.exceptions import ZalaException
 
 MISSING = object()
 

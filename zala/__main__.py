@@ -3,29 +3,17 @@ Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
-import pathlib
 import sys
-import typing
 
 import fire
 from loguru import logger
-from PyQt6.QtGui import QPixmap, QIcon
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 
 from zala.consts import APP_NAME, APP_LOGO_PATH
 from zala.main_window import ZalaSelect
-from zala.screenshot import ZalaException, ZalaScreenshot, repr_screen
-from zala.utils import generate_output_file_path
-
-
-class ScreenshotSaveResult(typing.NamedTuple):
-    success: bool
-    file_path: pathlib.Path
-
-
-def save_screenshot(pixmap: QPixmap, output_file_path: str | None) -> ScreenshotSaveResult:
-    output_file_path = pathlib.Path(output_file_path) if output_file_path else generate_output_file_path()
-    return ScreenshotSaveResult(pixmap.save(str(output_file_path)), output_file_path)
+from zala.screenshot import ZalaScreenshot, repr_screen, save_screenshot
+from zala.exceptions import ZalaException
 
 
 def set_logger(verbose: bool) -> None:

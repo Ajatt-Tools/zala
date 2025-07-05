@@ -15,7 +15,8 @@ from PyQt6.QtWidgets import (
 )
 
 from zala.consts import APP_NAME
-from zala.screenshot import TakenScreenshot, ZalaException
+from zala.screenshot import TakenScreenshot
+from zala.exceptions import ZalaException
 from zala.screenshot_preview import ScreenshotPreview
 from zala.utils import qconnect
 
