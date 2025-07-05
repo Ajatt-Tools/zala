@@ -4,7 +4,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
 from loguru import logger
-from PyQt6.QtCore import QRect, QSize, Qt
+from PyQt6.QtCore import QRect, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import (
     QCloseEvent,
     QPixmap,
@@ -29,9 +29,12 @@ class ZalaSelect(QMainWindow):
     _user_selected: QPixmap | None = None
     _min_selection_size: QSize = QSize(10, 10)
 
+    window_closed = pyqtSignal(QPixmap)
+
     def __init__(self, screen: TakenScreenshot, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle(APP_NAME)
+        self._user_selected = None
         self._taken = screen
         self._set_fullscreen_settings()
         self._init_ui()
@@ -41,9 +44,7 @@ class ZalaSelect(QMainWindow):
         qconnect(self._preview.selection_aborted, self._handle_selection_aborted)
 
     @property
-    def user_selection(self) -> QPixmap:
-        if self._user_selected is None:
-            raise ZalaException("user selection is empty")
+    def user_selection(self) -> QPixmap | None:
         return self._user_selected
 
     def _set_fullscreen_settings(self):
@@ -65,7 +66,7 @@ class ZalaSelect(QMainWindow):
     def _init_ui(self):
         self.setMinimumSize(320, 240)
 
-    def showFullScreen(self):
+    def showFullScreen(self) -> None:
         logger.debug("Zala window is opening.")
         QApplication.setOverrideCursor(Qt.CursorShape.CrossCursor)
         geometry = self._taken.screen.geometry()
@@ -77,6 +78,7 @@ class ZalaSelect(QMainWindow):
         logger.debug("Zala window is closing.")
         # Restore cursor
         QApplication.restoreOverrideCursor()
+        self.window_closed.emit(self.user_selection)
         return super().closeEvent(event)
 
     def _handle_selection_finished(self, selection: QRect) -> bool:

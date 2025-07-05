@@ -81,13 +81,11 @@ class CLI:
         window = ZalaSelect(self._scr.capture_screen())
         window.showFullScreen()
         exit_code = self._app.exec()
-        try:
-            pixmap = window.user_selection
-        except ZalaException:
-            exit_code = 1
+        if window.user_selection is None:
             print("Selection aborted")
+            exit_code = 1
         else:
-            result = save_screenshot(pixmap, output_file_path)
+            result = save_screenshot(window.user_selection, output_file_path)
             if result.success:
                 print(f"Selection saved to {result.file_path}")
             else:
