@@ -9,9 +9,10 @@ import typing
 
 import fire
 from loguru import logger
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import QApplication
 
+from zala.consts import APP_NAME, APP_LOGO_PATH
 from zala.main_window import ZalaSelect
 from zala.screenshot import ZalaException, ZalaScreenshot, repr_screen
 from zala.utils import generate_output_file_path
@@ -44,6 +45,8 @@ class CLI:
 
     def __init__(self, verbose: bool = False) -> None:
         self._app = QApplication(sys.argv)
+        self._app.setApplicationName(APP_NAME)
+        self._app.setWindowIcon(QIcon(APP_LOGO_PATH))
         self._scr = ZalaScreenshot(self._app)
         set_logger(verbose)
 
