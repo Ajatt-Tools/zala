@@ -2,6 +2,7 @@
 Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
+
 from PyQt6.QtCore import QSize, Qt, QRectF, QPointF, QMargins, pyqtSignal, QRect
 from PyQt6.QtGui import QColor, QBrush, QPen, QPixmap, QPainter, QKeyEvent, QMouseEvent
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsRectItem, QGraphicsView, QWidget

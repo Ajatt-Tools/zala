@@ -3,6 +3,7 @@ Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
+import pathlib
 import typing
 from collections.abc import Sequence
 
@@ -10,9 +11,8 @@ from loguru import logger
 from PyQt6.QtGui import QCursor, QPixmap, QScreen
 from PyQt6.QtWidgets import QApplication
 
-
-class ZalaException(Exception):
-    pass
+from zala.exceptions import ZalaException
+from zala.utils import generate_output_file_path
 
 
 def repr_screen(screen: QScreen) -> str:
@@ -45,6 +45,16 @@ def find_screen_with_cursor(screens: Sequence[QScreen]) -> QScreen:
 class TakenScreenshot(typing.NamedTuple):
     pixmap: QPixmap
     screen: QScreen
+
+
+class ScreenshotSaveResult(typing.NamedTuple):
+    success: bool
+    file_path: pathlib.Path
+
+
+def save_screenshot(pixmap: QPixmap, output_file_path: str | None) -> ScreenshotSaveResult:
+    output_file_path = pathlib.Path(output_file_path) if output_file_path else generate_output_file_path()
+    return ScreenshotSaveResult(pixmap.save(str(output_file_path)), output_file_path)
 
 
 class ZalaScreenshot:
