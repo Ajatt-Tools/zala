@@ -3,6 +3,8 @@ Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
+import typing
+
 from PyQt6.QtCore import QRect, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import (
     QCloseEvent,
@@ -17,7 +19,15 @@ from loguru import logger
 from zala.consts import APP_NAME
 from zala.screenshot import TakenScreenshot
 from zala.screenshot_preview import ScreenshotPreview
-from zala.utils import qconnect
+from zala.utils import qconnect, q_emit
+
+
+class UserSelectionResult(typing.NamedTuple):
+    pixmap: QPixmap | None = None
+    error: str = ""
+
+    def is_empty(self) -> bool:
+        return not (self.pixmap or self.error)
 
 
 class ZalaSelect(QMainWindow):
@@ -26,15 +36,15 @@ class ZalaSelect(QMainWindow):
     """
 
     _taken: TakenScreenshot
-    _user_selected: QPixmap | None = None
+    _user_selected: UserSelectionResult
     _min_selection_size: QSize = QSize(10, 10)
 
-    window_closed = pyqtSignal(QPixmap)
+    selection_finished = pyqtSignal(UserSelectionResult)
 
     def __init__(self, screen: TakenScreenshot, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle(APP_NAME)
-        self._user_selected = None
+        self._user_selected = UserSelectionResult()
         self._taken = screen
         self._set_fullscreen_settings()
         self._init_ui()
@@ -45,7 +55,7 @@ class ZalaSelect(QMainWindow):
 
     @property
     def user_selection(self) -> QPixmap | None:
-        return self._user_selected
+        return self._user_selected.pixmap
 
     def _set_fullscreen_settings(self):
         # By setting the border thickness and margin to zero,
@@ -78,7 +88,10 @@ class ZalaSelect(QMainWindow):
         logger.debug("Zala window is closing.")
         # Restore cursor
         QApplication.restoreOverrideCursor()
-        self.window_closed.emit(self.user_selection)
+        if self._user_selected.is_empty():
+            q_emit(self.selection_finished, UserSelectionResult(error="selection aborted"))
+        else:
+            q_emit(self.selection_finished, self._user_selected)
         return super().closeEvent(event)
 
     def _handle_selection_finished(self, selection: QRect) -> bool:
@@ -87,11 +100,13 @@ class ZalaSelect(QMainWindow):
             selection.width() >= self._min_selection_size.width()
             and selection.height() >= self._min_selection_size.height()
         ):
-            self._user_selected = self._taken.pixmap.copy(selection)
+            self._user_selected = UserSelectionResult(pixmap=self._taken.pixmap.copy(selection))
         else:
+            self._user_selected = UserSelectionResult(error="region is too small")
             logger.debug(f"Region is too small.")
         return self.close()  # self.closeEvent() will fire.
 
     def _handle_selection_aborted(self) -> bool:
         logger.debug("Region selection aborted.")
+        self._user_selected = UserSelectionResult(error="selection aborted")
         return self.close()  # self.closeEvent() will fire.
