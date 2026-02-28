@@ -13,8 +13,8 @@ from PyQt6.QtWidgets import QRubberBand, QWidget
 @dataclasses.dataclass
 class RubberBandOptions:
     border_thickness: int = 2
-    border_color: QColor = QColor(0, 0, 255)
-    fill_color: QColor = QColor(0, 128, 255, 60)
+    border_color: QColor = dataclasses.field(default_factory=lambda: QColor(0, 0, 255))
+    fill_color: QColor = dataclasses.field(default_factory=lambda: QColor(0, 128, 255, 60))
 
 
 class UserSelectionRubberBand(QRubberBand):
