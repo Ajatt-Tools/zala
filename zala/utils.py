@@ -38,3 +38,4 @@ def generate_output_file_path() -> pathlib.Path:
         path = pathlib.Path.home().joinpath(f"screenshot_{idx}.png")
         if not path.is_file():
             return path
+    raise ZalaException("couldn't generate path")
