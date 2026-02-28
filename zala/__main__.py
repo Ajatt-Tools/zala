@@ -34,7 +34,7 @@ class CLI:
     def __init__(self, verbose: bool = False) -> None:
         self._app = QApplication(sys.argv)
         self._app.setApplicationName(APP_NAME)
-        self._app.setWindowIcon(QIcon(APP_LOGO_PATH))
+        self._app.setWindowIcon(QIcon(str(APP_LOGO_PATH)))
         self._scr = ZalaScreenshot(self._app)
         set_logger(verbose)
 
