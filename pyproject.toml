@@ -25,6 +25,7 @@ classifiers = [
 ]
 # https://github.com/pypa/hatch/blob/master/docs/config/dependency.md
 dependencies = [
+    "beartype",
     "PyQt6>=6.8.0",
     "fire>=0.7.0",
     "loguru>=0.7.3",
