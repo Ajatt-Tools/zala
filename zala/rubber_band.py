@@ -33,8 +33,6 @@ class UserSelectionRubberBand(QRubberBand):
     ) -> None:
         super().__init__(shape, parent)
         self._opts = opts or RubberBandOptions()
-        self.set_border(opts.border_color, opts.border_thickness)
-        self.set_fill(opts.fill_color)
         self.hide()
 
     def set_border(self, color: QColor, thickness: int) -> None:
