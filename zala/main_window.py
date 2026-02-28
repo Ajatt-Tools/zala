@@ -3,7 +3,6 @@ Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
-from loguru import logger
 from PyQt6.QtCore import QRect, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import (
     QCloseEvent,
@@ -13,10 +12,10 @@ from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
 )
+from loguru import logger
 
 from zala.consts import APP_NAME
 from zala.screenshot import TakenScreenshot
-from zala.exceptions import ZalaException
 from zala.screenshot_preview import ScreenshotPreview
 from zala.utils import qconnect
 
