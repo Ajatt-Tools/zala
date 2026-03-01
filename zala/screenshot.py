@@ -16,6 +16,7 @@ from zala.utils import generate_output_file_path
 
 
 def repr_screen(screen: QScreen) -> str:
+    """Return a human-readable string describing the screen's name, position, and size."""
     geometry = screen.geometry()
     top_left = geometry.topLeft()
     size = geometry.size()
@@ -23,16 +24,19 @@ def repr_screen(screen: QScreen) -> str:
 
 
 def debug_screens(screens: Sequence[QScreen]) -> None:
+    """Log debug information about each available screen."""
     logger.debug(f"Found {len(screens)} screens.")
     for idx, screen in enumerate(screens):
         logger.debug(f"Screen #{idx}. {repr_screen(screen)}")
 
 
 def grab_window(screen: QScreen) -> QPixmap:
+    """Capture the entire screen contents and return as a pixmap scaled to the screen geometry."""
     return screen.grabWindow(x=0, y=0).scaled(screen.geometry().size())
 
 
 def find_screen_with_cursor(screens: Sequence[QScreen]) -> QScreen:
+    """Find and return the screen that currently contains the mouse cursor."""
     cursor = QCursor.pos()  # Get the current position of the cursor
     # Iterate through the screens to find which one contains the cursor position
     logger.debug(f"Cursor is at {cursor.x(), cursor.y()}.")
@@ -43,16 +47,21 @@ def find_screen_with_cursor(screens: Sequence[QScreen]) -> QScreen:
 
 
 class TakenScreenshot(typing.NamedTuple):
+    """Result of capturing a screen, holding the pixmap and the source screen."""
+
     pixmap: QPixmap
     screen: QScreen
 
 
 class ScreenshotSaveResult(typing.NamedTuple):
+    """Result of saving a screenshot, indicating success and the file path used."""
+
     success: bool
     file_path: pathlib.Path
 
 
 def save_screenshot(pixmap: QPixmap, output_file_path: str | None) -> ScreenshotSaveResult:
+    """Save a pixmap to disk at the given path, or generate a default path if none is provided."""
     output_file_path = pathlib.Path(output_file_path) if output_file_path else generate_output_file_path()
     return ScreenshotSaveResult(pixmap.save(str(output_file_path)), output_file_path)
 
@@ -65,12 +74,15 @@ class ZalaScreenshot:
     _app: QApplication
 
     def __init__(self, app: QApplication) -> None:
+        """Initialize the screenshot helper with the running QApplication instance."""
         self._app = app
 
     def find_available_screens(self) -> list[QScreen]:
+        """Return a list of all screens currently available to the application."""
         return self._app.screens()
 
     def capture_screen(self, index: int | None = None) -> TakenScreenshot:
+        """Capture a screenshot from the screen at the given index, or the screen under the cursor if None."""
         screens = self.find_available_screens()
         debug_screens(screens)
         try:

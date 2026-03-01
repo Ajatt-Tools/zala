@@ -17,6 +17,7 @@ from zala.exceptions import ZalaException
 
 
 def set_logger(verbose: bool) -> None:
+    """Configure the logger level based on the verbose flag."""
     # Replace the default handler with a new one.
     logger.remove()
     level = "DEBUG" if verbose else "INFO"
@@ -32,6 +33,7 @@ class CLI:
     _scr: ZalaScreenshot
 
     def __init__(self, verbose: bool = False) -> None:
+        """Initialize the QApplication, set the app icon, and configure logging."""
         self._app = QApplication(sys.argv)
         self._app.setApplicationName(APP_NAME)
         self._app.setWindowIcon(QIcon(str(APP_LOGO_PATH)))
@@ -81,7 +83,8 @@ class CLI:
         self._app.exit(exit_code)
 
 
-def main():
+def main() -> None:
+    """Entry point that dispatches CLI commands via python-fire."""
     try:
         fire.Fire(CLI)
     except ZalaException as e:

@@ -17,6 +17,7 @@ def add_border(
     border_thickness: int = 2,
     outline_color: QColor = QColor(255, 0, 0),
 ) -> QGraphicsRectItem:
+    """Add a semi-transparent overlay with a colored border to the graphics scene."""
     # Reference: https://doc.qt.io/qt-6/qbrush.html#details
     fill_brush = QBrush()
     fill_brush.setStyle(Qt.BrushStyle.Dense7Pattern)
@@ -41,9 +42,7 @@ def add_border(
 
 
 class ScreenshotPreview(QGraphicsView):
-    """
-    Fullscreen view
-    """
+    """Fullscreen graphics view that displays a screenshot and handles region selection via rubber band."""
 
     _scene: QGraphicsScene
     _screen_pixmap: QPixmap
@@ -53,6 +52,7 @@ class ScreenshotPreview(QGraphicsView):
     selection_aborted = pyqtSignal()
 
     def __init__(self, screen_pixmap: QPixmap, parent: QWidget | None = None):
+        """Initialize the preview with the captured screen pixmap and set up the rubber band selection."""
         super().__init__(parent)
         # Assign member variables
         self._screen_pixmap = screen_pixmap
@@ -83,18 +83,21 @@ class ScreenshotPreview(QGraphicsView):
     # Reference: https://doc.qt.io/qt-6/qrubberband.html#details
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
+        """Begin rubber band selection on left mouse button press."""
         if event.button() == Qt.MouseButton.LeftButton:
             self._rubber_band.set_selection_start(event.pos())
             self._rubber_band.show()
         return super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        """Update rubber band selection as the mouse moves while the left button is held."""
         if event.buttons() & Qt.MouseButton.LeftButton:
             self._rubber_band.set_selection_end(event.pos())
             self._rubber_band.show()
         return super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        """Finalize the rubber band selection on left mouse button release and emit the selected region."""
         if event.button() == Qt.MouseButton.LeftButton:
             self._rubber_band.set_selection_end(event.pos())
             self._rubber_band.hide()
