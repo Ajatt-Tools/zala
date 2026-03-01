@@ -6,7 +6,7 @@ requires = [
 ]
 
 [project]
-name = "Zala"
+name = "zala"
 dynamic = ["version"]
 description = "PyQt utility that takes screenshots."
 readme = "README.md"
