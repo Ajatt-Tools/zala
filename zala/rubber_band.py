@@ -3,11 +3,12 @@ Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
-from PyQt6.QtCore import QPoint, QRect, QSize
+from PyQt6.QtCore import QPoint, QRect, QSize, Qt
 from PyQt6.QtGui import QColor, QPainter, QPaintEvent, QPen
 from PyQt6.QtWidgets import QRubberBand, QWidget
 
 from zala.config import ScreenshotPreviewOpts
+from zala.utils import make_solid_pen
 
 
 class UserSelectionRubberBand(QRubberBand):
@@ -44,9 +45,20 @@ class UserSelectionRubberBand(QRubberBand):
         painter.begin(self)
         # Mask
         painter.fillRect(event.rect(), self._opts.fill_color)
+
         # Border
-        painter.setPen(QPen(self._opts.border_color, self._opts.border_thickness))
-        painter.drawRect(event.rect())
+        painter.setPen(make_solid_pen(self._opts.border_color, self._opts.border_thickness))
+
+        # Adjust rectangle to account for pen width so it doesn't get clipped
+        border_adjustment = self._opts.border_thickness // 2
+        painter.drawRect(
+            event.rect().adjusted(
+                border_adjustment,
+                border_adjustment,
+                -border_adjustment,
+                -border_adjustment,
+            )
+        )
         painter.end()
         # return super().paintEvent(event)
 

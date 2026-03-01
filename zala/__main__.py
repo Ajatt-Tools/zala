@@ -66,9 +66,9 @@ class CLI:
         self,
         output_file_path: str = "",
         border_thickness: int = 2,
-        border_color: str = "#0000ff",
+        border_color: str = "#990000ff",
         fill_color: str = "#3c0080ff",
-        outline_color: str = "#ff0000",
+        outline_color: str = "#99ff0000",
         fill_brush_color: str = "#557f7f7f",
     ) -> None:
         """
