@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
 from loguru import logger
 
 from zala.consts import APP_NAME
+from zala.config import ScreenshotPreviewOpts
 from zala.screenshot import TakenScreenshot
 from zala.screenshot_preview import ScreenshotPreview
 from zala.utils import qconnect, q_emit
@@ -44,7 +45,12 @@ class ZalaSelect(QMainWindow):
 
     selection_finished = pyqtSignal(UserSelectionResult)
 
-    def __init__(self, screen: TakenScreenshot, parent: QMainWindow | None = None) -> None:
+    def __init__(
+        self,
+        screen: TakenScreenshot,
+        parent: QMainWindow | None = None,
+        band_opts: ScreenshotPreviewOpts | None = None,
+    ) -> None:
         """Initialize the selection window with the captured screen and set up the preview widget."""
         super().__init__(parent)
         self.setWindowTitle(APP_NAME)
@@ -52,7 +58,7 @@ class ZalaSelect(QMainWindow):
         self._taken = screen
         self._set_fullscreen_settings()
         self._init_ui()
-        self._preview = ScreenshotPreview(screen_pixmap=self._taken.pixmap, parent=self)
+        self._preview = ScreenshotPreview(screen_pixmap=self._taken.pixmap, parent=self, opts=band_opts)
         self.setCentralWidget(self._preview)
         qconnect(self._preview.selection_finished, self._handle_selection_finished)
         qconnect(self._preview.selection_aborted, self._handle_selection_aborted)

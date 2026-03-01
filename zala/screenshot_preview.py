@@ -8,33 +8,35 @@ from PyQt6.QtGui import QColor, QBrush, QPen, QPixmap, QPainter, QKeyEvent, QMou
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsRectItem, QGraphicsView, QWidget
 
 from zala.rubber_band import UserSelectionRubberBand
+from zala.config import ScreenshotPreviewOpts
 from zala.utils import q_emit
 
 
 def add_border(
     scene: QGraphicsScene,
     box_size: QSize,
-    border_thickness: int = 2,
-    outline_color: QColor = QColor(255, 0, 0),
+    opts: ScreenshotPreviewOpts | None = None,
 ) -> QGraphicsRectItem:
     """Add a semi-transparent overlay with a colored border to the graphics scene."""
+    opts = opts or ScreenshotPreviewOpts()
+
     # Reference: https://doc.qt.io/qt-6/qbrush.html#details
     fill_brush = QBrush()
     fill_brush.setStyle(Qt.BrushStyle.Dense7Pattern)
-    fill_brush.setColor(QColor(127, 127, 127, 85))
+    fill_brush.setColor(opts.fill_brush_color)
 
     outline_pen = QPen()
     # Reference: https://doc.qt.io/qt-6/qt.html#PenStyle-enum
     outline_pen.setStyle(Qt.PenStyle.SolidLine)
     # Reference: https://doc.qt.io/qt-6/qt.html#PenJoinStyle-enum
     outline_pen.setJoinStyle(Qt.PenJoinStyle.MiterJoin)
-    outline_pen.setColor(outline_color)
-    outline_pen.setWidth(border_thickness)
+    outline_pen.setColor(opts.outline_color)
+    outline_pen.setWidth(opts.border_thickness)
 
     return scene.addRect(
         QRectF(
-            QPointF(border_thickness / 2, border_thickness / 2),
-            box_size.shrunkBy(QMargins(0, 0, border_thickness, border_thickness)).toSizeF(),
+            QPointF(opts.border_thickness / 2, opts.border_thickness / 2),
+            box_size.shrunkBy(QMargins(0, 0, opts.border_thickness, opts.border_thickness)).toSizeF(),
         ),
         outline_pen,
         fill_brush,
@@ -51,13 +53,15 @@ class ScreenshotPreview(QGraphicsView):
     selection_finished = pyqtSignal(QRect)
     selection_aborted = pyqtSignal()
 
-    def __init__(self, screen_pixmap: QPixmap, parent: QWidget | None = None):
+    def __init__(
+        self, screen_pixmap: QPixmap, parent: QWidget | None = None, opts: ScreenshotPreviewOpts | None = None
+    ):
         """Initialize the preview with the captured screen pixmap and set up the rubber band selection."""
         super().__init__(parent)
         # Assign member variables
         self._screen_pixmap = screen_pixmap
         self._scene = QGraphicsScene(self)
-        self._rubber_band = UserSelectionRubberBand(self)
+        self._rubber_band = UserSelectionRubberBand(self, opts=opts)
         # Set properties
         self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -67,7 +71,7 @@ class ScreenshotPreview(QGraphicsView):
         # Draw scene
         self._scene.addPixmap(self._screen_pixmap)
         self.setSceneRect(self._screen_pixmap.rect().toRectF())
-        add_border(self._scene, box_size=self._screen_pixmap.size(), border_thickness=2)
+        add_border(self._scene, box_size=self._screen_pixmap.size(), opts=opts)
 
     # Reference: https://doc.qt.io/qt-6/qwidget.html#keyPressEvent
 

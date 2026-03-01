@@ -3,20 +3,11 @@ Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
-import dataclasses
-
 from PyQt6.QtCore import QPoint, QRect, QSize
 from PyQt6.QtGui import QColor, QPainter, QPaintEvent, QPen
 from PyQt6.QtWidgets import QRubberBand, QWidget
 
-
-@dataclasses.dataclass
-class RubberBandOptions:
-    """Configuration options for the rubber band's border and fill colors."""
-
-    border_thickness: int = 2
-    border_color: QColor = dataclasses.field(default_factory=lambda: QColor(0, 0, 255))
-    fill_color: QColor = dataclasses.field(default_factory=lambda: QColor(0, 128, 255, 60))
+from zala.config import ScreenshotPreviewOpts
 
 
 class UserSelectionRubberBand(QRubberBand):
@@ -25,17 +16,17 @@ class UserSelectionRubberBand(QRubberBand):
     """
 
     _selection_start: QPoint = QPoint()
-    _opts: RubberBandOptions
+    _opts: ScreenshotPreviewOpts
 
     def __init__(
         self,
         parent: QWidget,
         shape: QRubberBand.Shape = QRubberBand.Shape.Rectangle,
-        opts: RubberBandOptions | None = None,
+        opts: ScreenshotPreviewOpts | None = None,
     ) -> None:
         """Initialize the rubber band with optional shape and styling options."""
         super().__init__(shape, parent)
-        self._opts = opts or RubberBandOptions()
+        self._opts = opts or ScreenshotPreviewOpts()
         self.hide()
 
     def set_border(self, color: QColor, thickness: int) -> None:
