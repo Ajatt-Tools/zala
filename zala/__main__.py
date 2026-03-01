@@ -7,11 +7,12 @@ import sys
 
 import fire
 from loguru import logger
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QColor, QIcon
 from PyQt6.QtWidgets import QApplication
 
 from zala.consts import APP_NAME, APP_LOGO_PATH
 from zala.main_window import ZalaSelect
+from zala.config import ScreenshotPreviewOpts
 from zala.screenshot import ZalaScreenshot, repr_screen, save_screenshot
 from zala.exceptions import ZalaException
 
@@ -61,14 +62,35 @@ class CLI:
         else:
             print(f"Failed to save screen {taken.screen.name()} to {result.file_path}")
 
-    def select(self, output_file_path: str | None = None) -> None:
+    def select(
+        self,
+        output_file_path: str= "",
+        border_thickness: int = 2,
+        border_color: str = "#0000ff",
+        fill_color: str = "#3c0080ff",
+        outline_color: str = "#ff0000",
+        fill_brush_color: str = "#557f7f7f",
+    ) -> None:
         """
         Enables an interactive selection mode
         where you may select the desired region before a screenshot is captured.
         Args:
             output_file_path: File path where the file will be saved.
+            border_thickness: Thickness of the selection border in pixels.
+            border_color: Rubber band border color as "#RRGGBB" or "#AARRGGBB" hex string. Alpha first.
+            fill_color: Rubber band fill color as "#RRGGBB" or "#AARRGGBB" hex string. Alpha first.
+            outline_color: Screen overlay outline color as "#RRGGBB" or "#AARRGGBB" hex string. Alpha first.
+            fill_brush_color: Screen overlay fill color as "#RRGGBB" or "#AARRGGBB" hex string. Alpha first.
         """
-        window = ZalaSelect(self._scr.capture_screen())
+
+        band_opts = ScreenshotPreviewOpts(
+            border_thickness=border_thickness,
+            border_color=QColor(border_color),
+            fill_color=QColor(fill_color),
+            outline_color=QColor(outline_color),
+            fill_brush_color=QColor(fill_brush_color),
+        )
+        window = ZalaSelect(self._scr.capture_screen(), band_opts=band_opts)
         window.showFullScreen()
         exit_code = self._app.exec()
         if window.user_selection is None:
