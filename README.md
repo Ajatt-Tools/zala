@@ -16,6 +16,14 @@ create screenshots and don't plan to integrate it into a PyQt project,
 consider using [maim](https://github.com/naelstrof/maim).
 Maim is written in a more efficient language.
 
+## Install
+
+Install using [pipx](https://pipx.pypa.io/stable/) from [pypi](https://pypi.org/project/zala/).
+
+```bash
+pipx install zala
+```
+
 ## Bash examples
 
 Take a region of the screen.
