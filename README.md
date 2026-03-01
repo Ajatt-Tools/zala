@@ -1,3 +1,8 @@
+# Zala
+
+[![Chat](https://img.shields.io/badge/chat-join-green?style=for-the-badge&logo=Telegram&logoColor=green)](https://ajatt.top/blog/join-our-community.html)
+[![Support](https://img.shields.io/badge/support-developer-orange?style=for-the-badge&logo=Patreon&logoColor=orange)](https://ajatt.top/blog/donating-to-tatsumoto.html)
+
 <p align="center">
 <img height="100px" src="https://github.com/Ajatt-Tools/zala/blob/main/doc/logo.svg" alt="Project logo">
 </p>
