@@ -28,6 +28,38 @@ Install using [pipx](https://pipx.pypa.io/stable/) from [pypi](https://pypi.org/
 pipx install zala
 ```
 
+## Python usage
+
+Zala can be integrated into PyQt6 projects as a library.
+The example below shows how to capture a screenshot and let the user select a region.
+
+```python
+import sys
+
+from PyQt6.QtWidgets import QApplication
+from zala.main_window import ZalaSelect, UserSelectionResult
+from zala.screenshot import ZalaScreenshot
+
+
+def main() -> None:
+    app = QApplication(sys.argv)
+    scr = ZalaScreenshot(app)
+
+    def on_selection_finished(result: UserSelectionResult) -> None:
+        if result.pixmap:
+            result.pixmap.save("screenshot.png")
+        app.quit()
+
+    sel = ZalaSelect(scr.capture_screen())
+    sel.selection_finished.connect(on_selection_finished)
+    sel.showFullScreen()
+    app.exec()
+
+
+if __name__ == "__main__":
+    main()
+```
+
 ## Bash examples
 
 Take a region of the screen.
