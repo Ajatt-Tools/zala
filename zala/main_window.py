@@ -49,7 +49,7 @@ class ZalaSelect(QMainWindow):
         self,
         screen: TakenScreenshot,
         parent: QMainWindow | None = None,
-        band_opts: ScreenshotPreviewOpts | None = None,
+        opts: ScreenshotPreviewOpts | None = None,
     ) -> None:
         """Initialize the selection window with the captured screen and set up the preview widget."""
         super().__init__(parent)
@@ -58,7 +58,7 @@ class ZalaSelect(QMainWindow):
         self._taken = screen
         self._set_fullscreen_settings()
         self._init_ui()
-        self._preview = ScreenshotPreview(screen_pixmap=self._taken.pixmap, parent=self, opts=band_opts)
+        self._preview = ScreenshotPreview(screen_pixmap=self._taken.pixmap, parent=self, opts=opts)
         self.setCentralWidget(self._preview)
         qconnect(self._preview.selection_finished, self._handle_selection_finished)
         qconnect(self._preview.selection_aborted, self._handle_selection_aborted)
