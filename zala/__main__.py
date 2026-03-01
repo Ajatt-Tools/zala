@@ -64,7 +64,7 @@ class CLI:
 
     def select(
         self,
-        output_file_path: str= "",
+        output_file_path: str = "",
         border_thickness: int = 2,
         border_color: str = "#0000ff",
         fill_color: str = "#3c0080ff",
@@ -83,14 +83,14 @@ class CLI:
             fill_brush_color: Screen overlay fill color as "#RRGGBB" or "#AARRGGBB" hex string. Alpha first.
         """
 
-        band_opts = ScreenshotPreviewOpts(
+        preview_opts = ScreenshotPreviewOpts(
             border_thickness=border_thickness,
             border_color=QColor(border_color),
             fill_color=QColor(fill_color),
             outline_color=QColor(outline_color),
             fill_brush_color=QColor(fill_brush_color),
         )
-        window = ZalaSelect(self._scr.capture_screen(), band_opts=band_opts)
+        window = ZalaSelect(self._scr.capture_screen(), opts=preview_opts)
         window.showFullScreen()
         exit_code = self._app.exec()
         if window.user_selection is None:
