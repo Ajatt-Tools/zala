@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QGraphicsScene, QGraphicsRectItem, QGraphicsView, QW
 
 from zala.rubber_band import UserSelectionRubberBand
 from zala.config import ScreenshotPreviewOpts
-from zala.utils import q_emit
+from zala.utils import q_emit, make_solid_pen
 
 
 def add_border(
@@ -25,20 +25,12 @@ def add_border(
     fill_brush.setStyle(Qt.BrushStyle.Dense7Pattern)
     fill_brush.setColor(opts.fill_brush_color)
 
-    outline_pen = QPen()
-    # Reference: https://doc.qt.io/qt-6/qt.html#PenStyle-enum
-    outline_pen.setStyle(Qt.PenStyle.SolidLine)
-    # Reference: https://doc.qt.io/qt-6/qt.html#PenJoinStyle-enum
-    outline_pen.setJoinStyle(Qt.PenJoinStyle.MiterJoin)
-    outline_pen.setColor(opts.outline_color)
-    outline_pen.setWidth(opts.border_thickness)
-
     return scene.addRect(
         QRectF(
             QPointF(opts.border_thickness / 2, opts.border_thickness / 2),
             box_size.shrunkBy(QMargins(0, 0, opts.border_thickness, opts.border_thickness)).toSizeF(),
         ),
-        outline_pen,
+        make_solid_pen(opts.outline_color, opts.border_thickness),
         fill_brush,
     )
 

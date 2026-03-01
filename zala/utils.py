@@ -8,7 +8,8 @@ import pathlib
 import time
 from collections.abc import Callable
 
-from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal
+from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, Qt
+from PyQt6.QtGui import QPen, QColor
 
 from zala.exceptions import ZalaException
 
@@ -39,3 +40,15 @@ def generate_output_file_path() -> pathlib.Path:
         if not path.is_file():
             return path
     raise ZalaException("couldn't generate path")
+
+
+def make_solid_pen(color: QColor, thickness: int) -> QPen:
+    # Pen
+    pen = QPen()
+    # Reference: https://doc.qt.io/qt-6/qt.html#PenStyle-enum
+    pen.setStyle(Qt.PenStyle.SolidLine)
+    # Reference: https://doc.qt.io/qt-6/qt.html#PenJoinStyle-enum
+    pen.setJoinStyle(Qt.PenJoinStyle.MiterJoin)
+    pen.setColor(color)
+    pen.setWidth(thickness)
+    return pen
