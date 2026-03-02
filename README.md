@@ -1,5 +1,5 @@
 <p align="center">
-<img height="100px" src="https://github.com/Ajatt-Tools/zala/blob/main/doc/logo.svg" alt="Project logo">
+<img height="100px" src="https://raw.githubusercontent.com/Ajatt-Tools/zala/refs/heads/main/doc/logo.svg" alt="Project logo">
 </p>
 
 # Zala
