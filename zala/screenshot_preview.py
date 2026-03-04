@@ -106,9 +106,9 @@ class ScreenshotPreview(QGraphicsView):
     def wheelEvent(self, event: QWheelEvent) -> None:
         """
         Reference: https://doc.qt.io/qt-6/qgraphicsview.html#wheelEvent
+        Note that calling super().wheelEvent(event) here will result in extra scrolling up or down.
         """
         self._zoom_screenshot_preview(event)
-        return super().wheelEvent(event)
 
     def paintEvent(self, event: QPaintEvent) -> None:
         """
@@ -130,6 +130,7 @@ class ScreenshotPreview(QGraphicsView):
     def _zoom_screenshot_preview(self, event: QWheelEvent) -> QWheelEvent:
         """
         Zoom in or out on the screenshot when the scroll wheel is used.
+        https://doc.qt.io/qt-6/qwheelevent.html
         """
         zo = self._zoomopts
 
@@ -141,6 +142,10 @@ class ScreenshotPreview(QGraphicsView):
         # This implementation uses the same factor for both width and height.
         current_scale = self.transform().m11()
         new_scale = clamp(zo.min_zoom, current_scale * zoom_factor, zo.max_zoom)
+
+        # Skip if already at the zoom limit.
+        if new_scale == current_scale:
+            return event
 
         # Apply the new absolute scale centered on the position under the cursor.
         self.setTransform(QTransform.fromScale(new_scale, new_scale))
