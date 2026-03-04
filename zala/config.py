@@ -19,3 +19,11 @@ class ScreenshotPreviewOpts:
     # for whole screen
     outline_color: QColor = dataclasses.field(default_factory=lambda: QColor(255, 0, 0))
     fill_brush_color: QColor = dataclasses.field(default_factory=lambda: QColor(127, 127, 127, 85))
+
+
+@dataclasses.dataclass
+class ZoomOpts:
+    zoom_in_factor: float = 1.25
+    zoom_out_factor: float = 1.0 / 1.25  # zoom out by 0.8
+    min_zoom: float = 1.0
+    max_zoom: float = 10.0

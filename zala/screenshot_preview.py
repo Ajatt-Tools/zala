@@ -4,11 +4,11 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
 from PyQt6.QtCore import QSize, Qt, QRectF, QPointF, QMargins, pyqtSignal, QRect
-from PyQt6.QtGui import QColor, QBrush, QPen, QPixmap, QPainter, QKeyEvent, QMouseEvent
+from PyQt6.QtGui import QColor, QBrush, QPen, QPixmap, QPainter, QKeyEvent, QMouseEvent, QWheelEvent
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsRectItem, QGraphicsView, QWidget
 
 from zala.rubber_band import UserSelectionRubberBand
-from zala.config import ScreenshotPreviewOpts
+from zala.config import ScreenshotPreviewOpts, ZoomOpts
 from zala.utils import q_emit, make_solid_pen
 
 
@@ -46,11 +46,16 @@ class ScreenshotPreview(QGraphicsView):
     selection_aborted = pyqtSignal()
 
     def __init__(
-        self, screen_pixmap: QPixmap, parent: QWidget | None = None, opts: ScreenshotPreviewOpts | None = None
+        self,
+        screen_pixmap: QPixmap,
+        parent: QWidget | None = None,
+        opts: ScreenshotPreviewOpts | None = None,
+        zoomopts: ZoomOpts | None = None,
     ):
         """Initialize the preview with the captured screen pixmap and set up the rubber band selection."""
         super().__init__(parent)
         # Assign member variables
+        self._zoomopts = zoomopts or ZoomOpts()
         self._screen_pixmap = screen_pixmap
         self._scene = QGraphicsScene(self)
         self._rubber_band = UserSelectionRubberBand(self, opts=opts)
@@ -97,5 +102,41 @@ class ScreenshotPreview(QGraphicsView):
         if event.button() == Qt.MouseButton.LeftButton:
             self._rubber_band.set_selection_end(event.pos())
             self._rubber_band.hide()
-            q_emit(self.selection_finished, self._rubber_band.geometry())
+            q_emit(self.selection_finished, self._current_scene_rectangle())
         return super().mouseReleaseEvent(event)
+
+    def _current_scene_rectangle(self) -> QRect:
+        """
+        Map rubber band rect from view (widget) coordinates to scene coordinates.
+        This ensures the correct image region is selected when the view is zoomed.
+        https://doc.qt.io/qt-6/qgraphicsview.html#mapToScene-3
+        https://doc.qt.io/qt-6/qpolygonf.html#boundingRect
+        """
+        return self.mapToScene(self._rubber_band.geometry()).boundingRect().toRect()
+
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        """
+        Zoom in or out on the screenshot when the scroll wheel is used.
+        Reference: https://doc.qt.io/qt-6/qgraphicsview.html#wheelEvent
+        """
+        zo = self._zoomopts
+
+        # angleDelta().y() provides the angle through which the common vertical mouse wheel was rotated since the previous event.
+        zoom_factor = zo.zoom_in_factor if event.angleDelta().y() > 0 else zo.zoom_out_factor
+
+        # Compute the new cumulative scale to enforce min/max limits.
+        # Returns the horizontal scaling factor: https://doc.qt.io/qt-6/qtransform.html#m11
+        current_scale = self.transform().m11()
+
+        new_scale = current_scale * zoom_factor
+        if new_scale < zo.min_zoom:
+            zoom_factor = zo.min_zoom / current_scale
+        elif new_scale > zo.max_zoom:
+            zoom_factor = zo.max_zoom / current_scale
+
+        # Zoom centered on the position under the cursor.
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.scale(zoom_factor, zoom_factor)
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
+
+        return super().wheelEvent(event)
