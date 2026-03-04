@@ -29,3 +29,4 @@ class ZoomOpts:
     zoom_out_factor: float = 1.0 / 1.25  # zoom out by 0.8
     min_zoom: float = 1.0
     max_zoom: float = 10.0
+    rotation_step: float = 5.0  # degrees per scroll notch when Shift is held

@@ -2,6 +2,8 @@
 Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
+import dataclasses
+from typing import Self
 
 from PyQt6.QtCore import Qt, pyqtSignal, QRect
 from PyQt6.QtGui import QPen, QPixmap, QPainter, QKeyEvent, QMouseEvent, QWheelEvent, QPaintEvent, QTransform
@@ -11,6 +13,27 @@ from zala.config import ScreenshotPreviewOpts, ZoomOpts
 from zala.rubber_band import UserSelectionRubberBand
 from zala.utils import q_emit, make_solid_pen, make_brush, clamp
 
+
+@dataclasses.dataclass
+class PreviewState:
+    zoom: float = 1.0
+    rotation: float = 0.0
+
+    def apply(self, view: QGraphicsView) -> QGraphicsView:
+        """
+        Apply the current zoom and rotation as a single combined transform.
+        Rotation is applied first, then scale.
+        """
+        view.setTransform(QTransform().rotate(self.rotation).scale(self.zoom, self.zoom))
+        return view
+
+    def set_zoom(self, new_scale: float) -> Self:
+        self.zoom = new_scale
+        return self
+
+    def set_rotation(self, rotation: float) -> Self:
+        self.rotation = rotation
+        return self
 
 class ScreenshotPreview(QGraphicsView):
     """Fullscreen graphics view that displays a screenshot and handles region selection via rubber band."""
@@ -35,6 +58,7 @@ class ScreenshotPreview(QGraphicsView):
         # Assign member variables
         self._opts = opts or ScreenshotPreviewOpts()
         self._zoomopts = zoomopts or ZoomOpts()
+        self._state = PreviewState()
         self._screen_pixmap = screen_pixmap
         self._scene = QGraphicsScene(self)
         self._rubber_band = UserSelectionRubberBand(self, opts=opts)
@@ -108,7 +132,10 @@ class ScreenshotPreview(QGraphicsView):
         Reference: https://doc.qt.io/qt-6/qgraphicsview.html#wheelEvent
         Note that calling super().wheelEvent(event) here will result in extra scrolling up or down.
         """
-        self._zoom_screenshot_preview(event)
+        if event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
+            self._rotate_screenshot_preview(event)
+        else:
+            self._zoom_screenshot_preview(event)
 
     def paintEvent(self, event: QPaintEvent) -> None:
         """
@@ -127,7 +154,7 @@ class ScreenshotPreview(QGraphicsView):
         """
         return self.mapToScene(self._rubber_band.geometry()).boundingRect().toRect()
 
-    def _zoom_screenshot_preview(self, event: QWheelEvent) -> QWheelEvent:
+    def _zoom_screenshot_preview(self, event: QWheelEvent) -> None:
         """
         Zoom in or out on the screenshot when the scroll wheel is used.
         https://doc.qt.io/qt-6/qwheelevent.html
@@ -138,19 +165,30 @@ class ScreenshotPreview(QGraphicsView):
         zoom_factor = zo.zoom_in_factor if event.angleDelta().y() > 0 else zo.zoom_out_factor
 
         # Compute the new cumulative scale to enforce min/max limits.
-        # Returns the **horizontal** scaling factor: https://doc.qt.io/qt-6/qtransform.html#m11
         # This implementation uses the same factor for both width and height.
-        current_scale = self.transform().m11()
-        new_scale = clamp(zo.min_zoom, current_scale * zoom_factor, zo.max_zoom)
+        # Clamp to min/max limits and skip if the scale would not change.
+        new_scale = clamp(zo.min_zoom, self._state.zoom * zoom_factor, zo.max_zoom)
 
         # Skip if already at the zoom limit.
-        if new_scale == current_scale:
-            return event
+        if new_scale == self._state.zoom:
+            return
 
-        # Apply the new absolute scale centered on the position under the cursor.
-        self.setTransform(QTransform.fromScale(new_scale, new_scale))
+        # Apply centered on the position under the cursor (AnchorUnderMouse is set in __init__).
+        self._state.set_zoom(new_scale).apply(self)
 
-        return event
+    def _rotate_screenshot_preview(self, event: QWheelEvent) -> None:
+        """
+        Rotate the screenshot preview when Shift+scroll is used.
+        Scroll up rotates clockwise; scroll down rotates counterclockwise.
+        Rotation is always centered on the cursor position.
+        """
+        step = self._zoomopts.rotation_step
+        delta = step if event.angleDelta().y() > 0 else -step
+
+        # Apply the new transform without any built-in anchor adjustment.
+        # AnchorUnderMouse / AnchorViewCenter rely on scroll bar range, which may be
+        # zero when the scene doesn't fill the viewport, causing inconsistent behavior.
+        self._state.set_rotation((self._state.rotation + delta) % 360).apply(self)
 
     def _draw_viewport_border(self) -> None:
         """
