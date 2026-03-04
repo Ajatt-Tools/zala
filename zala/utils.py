@@ -13,7 +13,7 @@ from contextlib import contextmanager
 from typing import Iterable
 
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, Qt
-from PyQt6.QtGui import QPen, QColor
+from PyQt6.QtGui import QPen, QColor, QBrush
 
 from zala.exceptions import ZalaException
 
@@ -67,3 +67,14 @@ def zala_temp_file(suffix: str = ".png") -> Iterable[pathlib.Path]:
         yield tmp_path
     finally:
         tmp_path.unlink(missing_ok=True)
+
+
+def make_brush(pattern: Qt.BrushStyle, color: QColor) -> QBrush:
+    """
+    https://doc.qt.io/qt-6/qbrush.html#details
+    https://doc.qt.io/qt-6/qt.html#BrushStyle-enum
+    """
+    fill_brush = QBrush()
+    fill_brush.setStyle(pattern)
+    fill_brush.setColor(color)
+    return fill_brush

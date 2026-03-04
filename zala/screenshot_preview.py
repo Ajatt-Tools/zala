@@ -3,36 +3,13 @@ Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
-from PyQt6.QtCore import QSize, Qt, QRectF, QPointF, QMargins, pyqtSignal, QRect
-from PyQt6.QtGui import QColor, QBrush, QPen, QPixmap, QPainter, QKeyEvent, QMouseEvent, QWheelEvent
+from PyQt6.QtCore import Qt, pyqtSignal, QRect
+from PyQt6.QtGui import QPen, QPixmap, QPainter, QKeyEvent, QMouseEvent, QWheelEvent, QPaintEvent
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsRectItem, QGraphicsView, QWidget
 
-from zala.rubber_band import UserSelectionRubberBand
 from zala.config import ScreenshotPreviewOpts, ZoomOpts
-from zala.utils import q_emit, make_solid_pen
-
-
-def add_border(
-    scene: QGraphicsScene,
-    box_size: QSize,
-    opts: ScreenshotPreviewOpts | None = None,
-) -> QGraphicsRectItem:
-    """Add a semi-transparent overlay with a colored border to the graphics scene."""
-    opts = opts or ScreenshotPreviewOpts()
-
-    # Reference: https://doc.qt.io/qt-6/qbrush.html#details
-    fill_brush = QBrush()
-    fill_brush.setStyle(Qt.BrushStyle.Dense7Pattern)
-    fill_brush.setColor(opts.fill_brush_color)
-
-    return scene.addRect(
-        QRectF(
-            QPointF(opts.border_thickness / 2, opts.border_thickness / 2),
-            box_size.shrunkBy(QMargins(0, 0, opts.border_thickness, opts.border_thickness)).toSizeF(),
-        ),
-        make_solid_pen(opts.outline_color, opts.border_thickness),
-        fill_brush,
-    )
+from zala.rubber_band import UserSelectionRubberBand
+from zala.utils import q_emit, make_solid_pen, make_brush
 
 
 class ScreenshotPreview(QGraphicsView):
@@ -55,6 +32,7 @@ class ScreenshotPreview(QGraphicsView):
         """Initialize the preview with the captured screen pixmap and set up the rubber band selection."""
         super().__init__(parent)
         # Assign member variables
+        self._opts = opts or ScreenshotPreviewOpts()
         self._zoomopts = zoomopts or ZoomOpts()
         self._screen_pixmap = screen_pixmap
         self._scene = QGraphicsScene(self)
@@ -67,24 +45,40 @@ class ScreenshotPreview(QGraphicsView):
         self.setScene(self._scene)
         # Draw scene
         self._scene.addPixmap(self._screen_pixmap)
+        self._fill_viewport_with_pattern()
         self.setSceneRect(self._screen_pixmap.rect().toRectF())
-        add_border(self._scene, box_size=self._screen_pixmap.size(), opts=opts)
 
-    # Reference: https://doc.qt.io/qt-6/qwidget.html#keyPressEvent
+    def _fill_viewport_with_pattern(self) -> QGraphicsRectItem:
+        """
+        Add fill overlay to the scene.
+
+        Note: The border is drawn separately as a fixed viewport-level overlay in paintEvent so it stays visible at any zoom level.
+        Unset pen to avoid drawing the border here.
+        """
+
+        return self._scene.addRect(
+            self._screen_pixmap.rect().toRectF(),
+            QPen(Qt.PenStyle.NoPen),
+            make_brush(self._opts.fill_brush_pattern, self._opts.fill_brush_color),
+        )
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """
         Key is pressed, but not released.
         Doesn't work when app is in background.
+
+        Reference: https://doc.qt.io/qt-6/qwidget.html#keyPressEvent
         """
         if event.key() == Qt.Key.Key_Escape:
             q_emit(self.selection_aborted)
         return super().keyPressEvent(event)
 
-    # Reference: https://doc.qt.io/qt-6/qrubberband.html#details
-
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        """Begin rubber band selection on left mouse button press."""
+        """
+        Begin rubber band selection on left mouse button press.
+
+        Reference: https://doc.qt.io/qt-6/qrubberband.html#details
+        """
         if event.button() == Qt.MouseButton.LeftButton:
             self._rubber_band.set_selection_start(event.pos())
             self._rubber_band.show()
@@ -105,19 +99,33 @@ class ScreenshotPreview(QGraphicsView):
             q_emit(self.selection_finished, self._current_scene_rectangle())
         return super().mouseReleaseEvent(event)
 
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        """
+        Reference: https://doc.qt.io/qt-6/qgraphicsview.html#wheelEvent
+        """
+        self._zoom_screenshot_preview(event)
+        return super().wheelEvent(event)
+
+    def paintEvent(self, event: QPaintEvent) -> None:
+        """
+        Draw the scene.
+        """
+        super().paintEvent(event)
+        self._draw_viewport_border()
+
     def _current_scene_rectangle(self) -> QRect:
         """
         Map rubber band rect from view (widget) coordinates to scene coordinates.
         This ensures the correct image region is selected when the view is zoomed.
+
         https://doc.qt.io/qt-6/qgraphicsview.html#mapToScene-3
         https://doc.qt.io/qt-6/qpolygonf.html#boundingRect
         """
         return self.mapToScene(self._rubber_band.geometry()).boundingRect().toRect()
 
-    def wheelEvent(self, event: QWheelEvent) -> None:
+    def _zoom_screenshot_preview(self, event: QWheelEvent) -> QWheelEvent:
         """
         Zoom in or out on the screenshot when the scroll wheel is used.
-        Reference: https://doc.qt.io/qt-6/qgraphicsview.html#wheelEvent
         """
         zo = self._zoomopts
 
@@ -139,4 +147,23 @@ class ScreenshotPreview(QGraphicsView):
         self.scale(zoom_factor, zoom_factor)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
 
-        return super().wheelEvent(event)
+        return event
+
+    def _draw_viewport_border(self) -> None:
+        """
+        Paint a fixed-position border on the viewport.
+
+        The border is drawn at widget (viewport) level rather than in the scene so
+        that it stays at a constant pixel size and is always fully visible,
+        regardless of the current zoom level.
+        """
+        viewport = self.viewport()
+        if viewport is None:
+            return
+        thickness = self._opts.border_thickness
+        half_thickness = thickness // 2
+
+        painter = QPainter(viewport)
+        painter.setPen(make_solid_pen(self._opts.outline_color, thickness))
+        painter.drawRect(viewport.rect().adjusted(half_thickness, half_thickness, -half_thickness, -half_thickness))
+        painter.end()

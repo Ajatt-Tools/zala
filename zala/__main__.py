@@ -6,6 +6,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import sys
 
 import fire
+from PyQt6.QtCore import Qt
 from loguru import logger
 from PyQt6.QtGui import QColor, QCursor, QIcon
 from PyQt6.QtWidgets import QApplication
@@ -86,6 +87,7 @@ class CLI:
         fill_color: str = "#3c0080ff",
         outline_color: str = "#99ff0000",
         fill_brush_color: str = "#557f7f7f",
+        fill_brush_pattern: str = "Dense7Pattern",
     ) -> None:
         """
         Enables an interactive selection mode
@@ -105,6 +107,8 @@ class CLI:
             fill_color=QColor(fill_color),
             outline_color=QColor(outline_color),
             fill_brush_color=QColor(fill_brush_color),
+            # https://doc.qt.io/qt-6/qt.html#BrushStyle-enum
+            fill_brush_pattern=Qt.BrushStyle[fill_brush_pattern],
         )
 
         def on_finished(user_selection: UserSelectionResult) -> None:
