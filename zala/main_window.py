@@ -127,7 +127,7 @@ class ZalaSelect(QMainWindow):
         return self.close()  # self.closeEvent() will fire.
 
     def _handle_selection_aborted(self) -> bool:
-        """Handle a cancelled selection by recording an abort error and closing the window."""
+        """Handle a canceled selection by recording an abort error and closing the window."""
         logger.debug("Region selection aborted.")
         self._user_selected = UserSelectionResult(error="selection aborted")
         return self.close()  # self.closeEvent() will fire.

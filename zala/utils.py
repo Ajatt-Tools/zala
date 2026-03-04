@@ -78,3 +78,7 @@ def make_brush(pattern: Qt.BrushStyle, color: QColor) -> QBrush:
     fill_brush.setStyle(pattern)
     fill_brush.setColor(color)
     return fill_brush
+
+
+def clamp[T: float | int](min_val: T, val: T, max_val: T) -> T:
+    return max(min_val, min(val, max_val))

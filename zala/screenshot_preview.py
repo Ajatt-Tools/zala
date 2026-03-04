@@ -4,12 +4,12 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
 from PyQt6.QtCore import Qt, pyqtSignal, QRect
-from PyQt6.QtGui import QPen, QPixmap, QPainter, QKeyEvent, QMouseEvent, QWheelEvent, QPaintEvent
+from PyQt6.QtGui import QPen, QPixmap, QPainter, QKeyEvent, QMouseEvent, QWheelEvent, QPaintEvent, QTransform
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsRectItem, QGraphicsView, QWidget
 
 from zala.config import ScreenshotPreviewOpts, ZoomOpts
 from zala.rubber_band import UserSelectionRubberBand
-from zala.utils import q_emit, make_solid_pen, make_brush
+from zala.utils import q_emit, make_solid_pen, make_brush, clamp
 
 
 class ScreenshotPreview(QGraphicsView):
@@ -31,18 +31,22 @@ class ScreenshotPreview(QGraphicsView):
     ):
         """Initialize the preview with the captured screen pixmap and set up the rubber band selection."""
         super().__init__(parent)
+
         # Assign member variables
         self._opts = opts or ScreenshotPreviewOpts()
         self._zoomopts = zoomopts or ZoomOpts()
         self._screen_pixmap = screen_pixmap
         self._scene = QGraphicsScene(self)
         self._rubber_band = UserSelectionRubberBand(self, opts=opts)
+
         # Set properties
         self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setObjectName("main_window_contents")
         self.setScene(self._scene)
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+
         # Draw scene
         self._scene.addPixmap(self._screen_pixmap)
         self._fill_viewport_with_pattern()
@@ -133,19 +137,13 @@ class ScreenshotPreview(QGraphicsView):
         zoom_factor = zo.zoom_in_factor if event.angleDelta().y() > 0 else zo.zoom_out_factor
 
         # Compute the new cumulative scale to enforce min/max limits.
-        # Returns the horizontal scaling factor: https://doc.qt.io/qt-6/qtransform.html#m11
+        # Returns the **horizontal** scaling factor: https://doc.qt.io/qt-6/qtransform.html#m11
+        # This implementation uses the same factor for both width and height.
         current_scale = self.transform().m11()
+        new_scale = clamp(zo.min_zoom, current_scale * zoom_factor, zo.max_zoom)
 
-        new_scale = current_scale * zoom_factor
-        if new_scale < zo.min_zoom:
-            zoom_factor = zo.min_zoom / current_scale
-        elif new_scale > zo.max_zoom:
-            zoom_factor = zo.max_zoom / current_scale
-
-        # Zoom centered on the position under the cursor.
-        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
-        self.scale(zoom_factor, zoom_factor)
-        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
+        # Apply the new absolute scale centered on the position under the cursor.
+        self.setTransform(QTransform.fromScale(new_scale, new_scale))
 
         return event
 
