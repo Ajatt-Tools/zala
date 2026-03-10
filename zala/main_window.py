@@ -13,6 +13,7 @@ from PyQt6.QtGui import (
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
+    QWidget,
 )
 from loguru import logger
 
@@ -48,7 +49,7 @@ class ZalaSelect(QMainWindow):
     def __init__(
         self,
         screen: TakenScreenshot,
-        parent: QMainWindow | None = None,
+        parent: QWidget | None = None,
         opts: ScreenshotPreviewOpts | None = None,
     ) -> None:
         """Initialize the selection window with the captured screen and set up the preview widget."""
