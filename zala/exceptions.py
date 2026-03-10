@@ -9,5 +9,6 @@ class ZalaException(Exception):
 
     pass
 
+
 class CaptureScreenError(ZalaException):
     pass

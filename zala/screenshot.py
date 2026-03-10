@@ -31,7 +31,10 @@ def debug_screens(screens: Sequence[QScreen]) -> None:
 
 
 def grab_window(screen: QScreen) -> QPixmap:
-    """Capture the entire screen contents and return as a pixmap scaled to the screen geometry."""
+    """
+    Capture the entire screen contents and return as a pixmap scaled to the screen geometry.
+    https://doc.qt.io/qt-6/qscreen.html#grabWindow
+    """
     return screen.grabWindow(x=0, y=0).scaled(screen.geometry().size())
 
 
