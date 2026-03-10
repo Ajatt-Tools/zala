@@ -90,7 +90,10 @@ class ZalaSelect(QMainWindow):
         self.setMinimumSize(320, 240)
 
     def showFullScreen(self) -> None:
-        """Show the window in fullscreen mode, positioned on the captured screen with a cross cursor."""
+        """
+        Show the window in fullscreen mode, positioned on the captured screen with a cross cursor.
+        https://doc.qt.io/qt-6/qwidget.html#showFullScreen
+        """
         logger.debug("Zala window is opening.")
         QApplication.setOverrideCursor(Qt.CursorShape.CrossCursor)
         geometry = self._taken.screen.geometry()
