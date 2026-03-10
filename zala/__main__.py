@@ -11,10 +11,11 @@ from PyQt6.QtGui import QColor, QIcon
 from PyQt6.QtWidgets import QApplication
 
 from zala.consts import APP_NAME, APP_LOGO_PATH
-from zala.main_window import ZalaSelect
+from zala.main_window import ZalaSelect, UserSelectionResult
 from zala.config import ScreenshotPreviewOpts
 from zala.screenshot import ZalaScreenshot, repr_screen, save_screenshot
 from zala.exceptions import ZalaException
+from zala.take_region import ZalaTakeScreenRegion
 
 
 def set_logger(verbose: bool) -> None:
@@ -90,19 +91,22 @@ class CLI:
             outline_color=QColor(outline_color),
             fill_brush_color=QColor(fill_brush_color),
         )
-        window = ZalaSelect(self._scr.capture_screen(), opts=preview_opts)
-        window.showFullScreen()
-        exit_code = self._app.exec()
-        if window.user_selection is None:
-            print("Selection aborted")
-            exit_code = 1
-        else:
-            result = save_screenshot(window.user_selection, output_file_path)
+
+        def on_finished(user_selection: UserSelectionResult) -> None:
+            if not user_selection.pixmap:
+                logger.info("Selection aborted")
+                return
+
+            result = save_screenshot(user_selection.pixmap, output_file_path)
             if result.success:
                 print(f"Selection saved to {result.file_path}")
             else:
                 print(f"Failed to save selection to {result.file_path}")
-        self._app.exit(exit_code)
+
+        take = ZalaTakeScreenRegion(self._scr)
+        take.select_area(on_finish=on_finished, opts=preview_opts)
+
+        self._app.exit(self._app.exec())
 
 
 def main() -> None:
