@@ -8,3 +8,6 @@ class ZalaException(Exception):
     """Base exception for all Zala-specific errors."""
 
     pass
+
+class CaptureScreenError(ZalaException):
+    pass

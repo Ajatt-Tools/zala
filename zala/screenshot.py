@@ -11,7 +11,7 @@ from loguru import logger
 from PyQt6.QtGui import QCursor, QPixmap, QScreen
 from PyQt6.QtWidgets import QApplication
 
-from zala.exceptions import ZalaException
+from zala.exceptions import ZalaException, CaptureScreenError
 from zala.utils import generate_output_file_path
 
 
@@ -90,7 +90,9 @@ class ZalaScreenshot:
         except TypeError:
             target_screen = find_screen_with_cursor(screens)
         except IndexError as e:
-            raise ZalaException(f"screen #{index} does not exist") from e
+            raise CaptureScreenError(f"screen #{index} does not exist") from e
         pixmap = grab_window(target_screen)
+        if pixmap.isNull():
+            raise CaptureScreenError("failed to take screenshot. pixmap is null")
         logger.debug(f"Screen {target_screen.name()} taken.")
         return TakenScreenshot(pixmap, target_screen)
