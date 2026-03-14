@@ -11,8 +11,9 @@ from loguru import logger
 from PyQt6.QtGui import QCursor, QPixmap, QScreen
 from PyQt6.QtWidgets import QApplication
 
-from zala.exceptions import ZalaException, CaptureScreenError
+from zala.exceptions import CaptureScreenError
 from zala.utils import generate_output_file_path
+from zala.wayland_hacks import find_focused_screen_wayland, grab_window_wayland, is_wayland
 
 
 def repr_screen(screen: QScreen) -> str:
@@ -33,20 +34,49 @@ def debug_screens(screens: Sequence[QScreen]) -> None:
 def grab_window(screen: QScreen) -> QPixmap:
     """
     Capture the entire screen contents and return as a pixmap scaled to the screen geometry.
+
+    On Wayland, QScreen.grabWindow() always returns a null pixmap.
+    In that case, try other screenshot programs found in the system.
+
     https://doc.qt.io/qt-6/qscreen.html#grabWindow
     """
-    return screen.grabWindow(x=0, y=0).scaled(screen.geometry().size())
+    pixmap = screen.grabWindow(x=0, y=0).scaled(screen.geometry().size())
+    if pixmap.isNull() and is_wayland():
+        return grab_window_wayland(screen)
+    return pixmap
 
 
 def find_screen_with_cursor(screens: Sequence[QScreen]) -> QScreen:
-    """Find and return the screen that currently contains the mouse cursor."""
+    """
+    Find and return the screen that currently contains the mouse cursor.
+
+    On Wayland, QCursor.pos() always reports (0, 0) because the
+    protocol does not expose the global pointer position to clients.  In that
+    case we query compositor-specific tools (Hyprland, Sway) to determine the
+    active output, and fall back to the primary screen only when no tool is
+    available.
+    """
+
+    if not screens:
+        raise CaptureScreenError("no screens available.")
+
+    if is_wayland():
+        logger.debug(
+            "Wayland detected: global cursor position is unavailable via Qt. Querying compositor-specific tools."
+        )
+        screen = find_focused_screen_wayland(screens)
+        if screen is not None:
+            return screen
+        logger.debug("Could not determine cursor screen on Wayland. Falling back to the primary screen.")
+        return screens[0]
+
     cursor = QCursor.pos()  # Get the current position of the cursor
     # Iterate through the screens to find which one contains the cursor position
     logger.debug(f"Cursor is at {cursor.x(), cursor.y()}.")
     for screen in screens:
         if screen.geometry().contains(cursor):
             return screen
-    raise RuntimeError("couldn't find active screen.")
+    raise CaptureScreenError("couldn't find active screen.")
 
 
 class TakenScreenshot(typing.NamedTuple):
