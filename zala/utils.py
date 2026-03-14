@@ -4,9 +4,13 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
 import itertools
+import os
 import pathlib
+import tempfile
 import time
 from collections.abc import Callable
+from contextlib import contextmanager
+from typing import Iterable
 
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, Qt
 from PyQt6.QtGui import QPen, QColor
@@ -52,3 +56,14 @@ def make_solid_pen(color: QColor, thickness: int) -> QPen:
     pen.setColor(color)
     pen.setWidth(thickness)
     return pen
+
+
+@contextmanager
+def zala_temp_file(suffix: str = ".png") -> Iterable[pathlib.Path]:
+    tmp_fd, tmp_path = tempfile.mkstemp(suffix=suffix)
+    os.close(tmp_fd)
+    tmp_path = pathlib.Path(tmp_path)
+    try:
+        yield tmp_path
+    finally:
+        tmp_path.unlink(missing_ok=True)
