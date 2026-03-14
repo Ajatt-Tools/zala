@@ -7,13 +7,13 @@ import sys
 
 import fire
 from loguru import logger
-from PyQt6.QtGui import QColor, QIcon
+from PyQt6.QtGui import QColor, QCursor, QIcon
 from PyQt6.QtWidgets import QApplication
 
 from zala.consts import APP_NAME, APP_LOGO_PATH
 from zala.main_window import ZalaSelect, UserSelectionResult
 from zala.config import ScreenshotPreviewOpts
-from zala.screenshot import ZalaScreenshot, repr_screen, save_screenshot
+from zala.screenshot import ZalaScreenshot, find_screen_with_cursor, repr_screen, save_screenshot
 from zala.exceptions import ZalaException
 from zala.take_region import ZalaTakeScreenRegion
 
@@ -41,6 +41,21 @@ class CLI:
         self._app.setWindowIcon(QIcon(str(APP_LOGO_PATH)))
         self._scr = ZalaScreenshot(self._app)
         set_logger(verbose)
+
+    def cursor_pos(self) -> None:
+        """
+        Print the current cursor position.
+        """
+        pos = QCursor.pos()
+
+        print(f"Cursor position: {pos.x(), pos.y()}")
+
+    def focused_screen(self) -> None:
+        """
+        Print the focused screen.
+        """
+        screens = self._scr.find_available_screens()
+        print(f"Focused screen: {repr_screen(find_screen_with_cursor(screens))}")
 
     def screens(self) -> None:
         """
