@@ -76,7 +76,7 @@ def find_screen_with_cursor(screens: Sequence[QScreen]) -> QScreen:
 
     cursor = QCursor.pos()  # Get the current position of the cursor
     # Iterate through the screens to find which one contains the cursor position
-    logger.debug(f"Cursor is at {cursor.x(), cursor.y()}.")
+    logger.debug(f"QCursor is at {cursor.x(), cursor.y()}.")
     for screen in screens:
         if screen.geometry().contains(cursor):
             return screen
