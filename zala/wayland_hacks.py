@@ -217,6 +217,9 @@ def find_focused_screen_wayland(screens: Sequence[QScreen]) -> QScreen | None:
 
     Returns None if neither tool is available or succeeds, so the caller can decide on a suitable fallback.
     """
+    if not screens:
+        return None
+
     # Hyprland
     cursor = find_cursor_position_hyprland()
     if cursor is not None:
