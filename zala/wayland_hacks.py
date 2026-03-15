@@ -192,15 +192,14 @@ def find_focused_screen_sway(subprocess_timeout_sec: int = 6) -> str | None:
             if focused_name:
                 logger.debug(f"Sway reports focused output: {focused_name!r}.")
                 return focused_name
-    except (
-        FileNotFoundError,
-        subprocess.TimeoutExpired,
-        json.JSONDecodeError,
-        KeyError,
-        TypeError,
-        AttributeError,
-    ) as e:
-        logger.debug(f"sway failed to determine focused screen: {e}")
+    except FileNotFoundError as e:
+        logger.debug(f"swaymsg command not found: {e}")
+    except subprocess.TimeoutExpired as e:
+        logger.debug(f"swaymsg timed out: {e}")
+    except json.JSONDecodeError as e:
+        logger.debug(f"Failed to parse swaymsg JSON output: {e}")
+    except (KeyError, TypeError, AttributeError) as e:
+        logger.debug(f"Unexpected output format from swaymsg: {e}")
     return None
 
 
