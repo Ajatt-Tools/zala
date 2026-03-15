@@ -62,11 +62,22 @@ def load_screenshot_pixmap(tmp_path: pathlib.Path, screen: QScreen, full_desktop
     pixmap = QPixmap(str(tmp_path))
     if pixmap.isNull():
         return pixmap
+
     if full_desktop:
-        # Tools such as gnome-screenshot and spectacle capture the entire
-        # virtual desktop. Crop to the target screen's physical geometry so
-        # that only its pixels remain.
-        pixmap = pixmap.copy(screen_physical_rect(screen))
+        # Tools such as gnome-screenshot and spectacle capture the entire virtual desktop.
+        # Crop to the target screen's physical geometry so that only its pixels remain.
+        crop_rect = screen_physical_rect(screen)
+        # Ensure the crop rectangle lies within the pixmap bounds.
+        # https://doc.qt.io/qt-6/qrect.html#intersected
+        crop_rect = crop_rect.intersected(pixmap.rect())
+        if crop_rect.isEmpty():
+            logger.warning(
+                f"Crop rectangle {crop_rect} is empty or outside screenshot bounds. Falling back to whole pixmap."
+            )
+        else:
+            # https://doc.qt.io/qt-6/qpixmap.html#copy
+            pixmap = pixmap.copy(crop_rect)
+
     # Scale from physical pixels to logical pixels, mirroring the original X11/XCB path:
     return pixmap.scaled(screen.geometry().size())
 
