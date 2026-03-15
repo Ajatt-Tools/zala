@@ -164,8 +164,8 @@ def find_cursor_position_hyprland() -> QPoint | None:
             cursor = QPoint(int(x_str.strip()), int(y_str.strip()))
             logger.debug(f"Hyprland reports cursor at {cursor.x(), cursor.y()}.")
             return cursor
-    except (FileNotFoundError, subprocess.TimeoutExpired, ValueError):
-        logger.debug(f"Hyprland failed to determine cursor position.")
+    except (FileNotFoundError, subprocess.TimeoutExpired, ValueError) as e:
+        logger.debug(f"Hyprland failed to determine cursor position: {e}")
     return None
 
 
