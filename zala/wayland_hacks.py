@@ -19,7 +19,8 @@ from zala.exceptions import CaptureScreenError
 from zala.utils import zala_temp_file
 
 # Wayland is SHIT. But this program has to support it because some people still use Wayland.
-# To be able to take screenshots on Wayland, some ugly hacks can be used.
+# Wayland requires ugly workarounds because Qt's screen capture API does not work under Wayland.
+# This module implements those workarounds using external screenshot tools.
 
 
 def is_wayland() -> bool:
