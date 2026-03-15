@@ -41,8 +41,12 @@ def grab_window(screen: QScreen) -> QPixmap:
     https://doc.qt.io/qt-6/qscreen.html#grabWindow
     """
     pixmap = screen.grabWindow(x=0, y=0).scaled(screen.geometry().size())
-    if pixmap.isNull() and is_wayland():
-        return grab_window_wayland(screen)
+    if pixmap.isNull():
+        if is_wayland():
+            logger.debug("Wayland detected, using external screenshot tool.")
+            return grab_window_wayland(screen)
+        else:
+            logger.warning("Screen grab returned a null pixmap on non-Wayland session.")
     return pixmap
 
 
