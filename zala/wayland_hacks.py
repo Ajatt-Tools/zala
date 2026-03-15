@@ -36,13 +36,16 @@ def screen_physical_rect(screen: QScreen) -> QRect:
     Multiplying by the device pixel ratio gives the corresponding rectangle
     in the coordinate space of a full-desktop screenshot PNG.
     """
-    dpr = screen.devicePixelRatio()
+    # https://doc.qt.io/qt-6/qscreen.html#devicePixelRatio-prop
+    pixel_ratio = screen.devicePixelRatio()
     geo = screen.geometry()
+    # NOTE: round() returns int.
+    # https://docs.python.org/3/library/functions.html#round
     return QRect(
-        round(geo.x() * dpr),
-        round(geo.y() * dpr),
-        round(geo.width() * dpr),
-        round(geo.height() * dpr),
+        round(geo.x() * pixel_ratio),
+        round(geo.y() * pixel_ratio),
+        round(geo.width() * pixel_ratio),
+        round(geo.height() * pixel_ratio),
     )
 
 
