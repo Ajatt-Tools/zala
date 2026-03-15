@@ -100,7 +100,7 @@ def find_wayland_screenshot_program() -> str:
     )
 
 
-def grab_window_wayland(screen: QScreen, timeout_seconds: int = 10) -> QPixmap:
+def grab_window_wayland(screen: QScreen, subprocess_timeout_sec: int = 10) -> QPixmap:
     """
     Capture the entire screen on Wayland by delegating to an external screenshot tool,
     since QScreen.grabWindow() always returns a null pixmap on Wayland.
@@ -129,9 +129,9 @@ def grab_window_wayland(screen: QScreen, timeout_seconds: int = 10) -> QPixmap:
         tool = cmd[0]
         logger.debug(f"Running {tool!r} to capture Wayland output '{screen.name()}'.")
         try:
-            result = subprocess.run(cmd, capture_output=True, timeout=timeout_seconds)
+            result = subprocess.run(cmd, capture_output=True, timeout=subprocess_timeout_sec)
         except subprocess.TimeoutExpired:
-            raise CaptureScreenError(f"{tool} timed out after {timeout_seconds} seconds.")
+            raise CaptureScreenError(f"{tool} timed out after {subprocess_timeout_sec} seconds.")
         if result.returncode != 0:
             stderr = result.stderr.decode(errors="replace").strip()
             raise CaptureScreenError(f"{tool} exited with code {result.returncode}: {stderr}")
