@@ -147,7 +147,7 @@ class SwayOutput(typing.TypedDict):
     name: str
 
 
-def find_cursor_position_hyprland() -> QPoint | None:
+def find_cursor_position_hyprland(subprocess_timeout_sec: int = 6) -> QPoint | None:
     """
     Attempt to determine the cursor position on Hyprland.
     """
@@ -156,7 +156,7 @@ def find_cursor_position_hyprland() -> QPoint | None:
             ["hyprctl", "cursorpos"],
             capture_output=True,
             text=True,
-            timeout=2,
+            timeout=subprocess_timeout_sec,
         )
         if result.returncode == 0:
             # Output format: "1234, 567"
