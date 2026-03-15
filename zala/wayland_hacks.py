@@ -164,8 +164,10 @@ def find_cursor_position_hyprland(subprocess_timeout_sec: int = 6) -> QPoint | N
             cursor = QPoint(int(x_str.strip()), int(y_str.strip()))
             logger.debug(f"Hyprland reports cursor at {cursor.x(), cursor.y()}.")
             return cursor
-    except (FileNotFoundError, subprocess.TimeoutExpired, ValueError) as e:
+    except (FileNotFoundError, subprocess.TimeoutExpired) as e:
         logger.debug(f"Hyprland failed to determine cursor position: {e}")
+    except ValueError as e:
+        logger.debug(f"Hyprland returned unparseable cursor coordinates: {e}")
     return None
 
 
