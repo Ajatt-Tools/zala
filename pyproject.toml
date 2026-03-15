@@ -86,8 +86,8 @@ dependencies = [
     "mypy>=1.0.0",
     "pytest",
     "pytest-asyncio",
+    "beartype",
 ]
-parallel = true
 randomize = true
 
 [[tool.hatch.envs.hatch-test.matrix]]
