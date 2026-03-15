@@ -171,7 +171,7 @@ def find_cursor_position_hyprland(subprocess_timeout_sec: int = 6) -> QPoint | N
     return None
 
 
-def find_focused_screen_sway() -> str | None:
+def find_focused_screen_sway(subprocess_timeout_sec: int = 6) -> str | None:
     """
     Attempt to determine which screen the cursor is on.
     """
@@ -180,7 +180,7 @@ def find_focused_screen_sway() -> str | None:
             ["swaymsg", "-r", "-t", "get_outputs"],
             capture_output=True,
             text=True,
-            timeout=2,
+            timeout=subprocess_timeout_sec,
         )
         if result.returncode == 0:
             outputs = typing.cast(list[SwayOutput], json.loads(result.stdout))
