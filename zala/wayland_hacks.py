@@ -15,6 +15,7 @@ from loguru import logger
 from PyQt6.QtCore import QPoint, QRect
 from PyQt6.QtGui import QPixmap, QScreen
 
+from zala.consts import SUBPROCESS_TIMEOUT_SEC
 from zala.exceptions import CaptureScreenError
 from zala.utils import zala_temp_file
 
@@ -100,7 +101,7 @@ def find_wayland_screenshot_program() -> str:
     )
 
 
-def grab_window_wayland(screen: QScreen, subprocess_timeout_sec: int = 10) -> QPixmap:
+def grab_window_wayland(screen: QScreen, subprocess_timeout_sec: int = SUBPROCESS_TIMEOUT_SEC) -> QPixmap:
     """
     Capture the entire screen on Wayland by delegating to an external screenshot tool,
     since QScreen.grabWindow() always returns a null pixmap on Wayland.
@@ -147,7 +148,7 @@ class SwayOutput(typing.TypedDict):
     name: str
 
 
-def find_cursor_position_hyprland(subprocess_timeout_sec: int = 6) -> QPoint | None:
+def find_cursor_position_hyprland(subprocess_timeout_sec: int = SUBPROCESS_TIMEOUT_SEC) -> QPoint | None:
     """
     Attempt to determine the cursor position on Hyprland.
     """

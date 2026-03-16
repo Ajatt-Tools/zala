@@ -8,3 +8,4 @@ import pathlib
 APP_NAME = "Zala"
 THIS_DIR = pathlib.Path(__file__).resolve().parent
 APP_LOGO_PATH = THIS_DIR / "icons" / "logo.ico"
+SUBPROCESS_TIMEOUT_SEC = 10
