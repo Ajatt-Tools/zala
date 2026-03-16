@@ -158,17 +158,27 @@ def find_cursor_position_hyprland(subprocess_timeout_sec: int = 6) -> QPoint | N
             text=True,
             timeout=subprocess_timeout_sec,
         )
-        if result.returncode == 0:
-            # Output format: "1234, 567"
-            x_str, y_str = result.stdout.strip().split(",")
-            cursor = QPoint(int(x_str.strip()), int(y_str.strip()))
-            logger.debug(f"Hyprland reports cursor at {cursor.x(), cursor.y()}.")
-            return cursor
-    except (FileNotFoundError, subprocess.TimeoutExpired) as e:
-        logger.debug(f"Hyprland failed to determine cursor position: {e}")
+    except FileNotFoundError as e:
+        logger.debug(f"hyprctl command not found: {e}")
+        return None
+    except subprocess.TimeoutExpired as e:
+        logger.debug(f"hyprctl timed out: {e}")
+        return None
+
+    if result.returncode != 0:
+        logger.debug(f"hyprctl exited with code {result.returncode}.")
+        return None
+
+    try:
+        # Output format: "1234, 567"
+        x_str, y_str = result.stdout.strip().split(",")
+        cursor = QPoint(int(x_str.strip()), int(y_str.strip()))
     except ValueError as e:
         logger.debug(f"Hyprland returned unparseable cursor coordinates: {e}")
-    return None
+        return None
+
+    logger.debug(f"Hyprland reports cursor at {cursor.x(), cursor.y()}.")
+    return cursor
 
 
 def find_focused_screen_sway(subprocess_timeout_sec: int = 6) -> str | None:
@@ -182,24 +192,37 @@ def find_focused_screen_sway(subprocess_timeout_sec: int = 6) -> str | None:
             text=True,
             timeout=subprocess_timeout_sec,
         )
-        if result.returncode == 0:
-            outputs = typing.cast(list[SwayOutput], json.loads(result.stdout))
-            focused_name = next(
-                # Sometimes the dict has no 'focused' key.
-                (output["name"] for output in outputs if output.get("focused")),
-                None,
-            )
-            if focused_name:
-                logger.debug(f"Sway reports focused output: {focused_name!r}.")
-                return focused_name
     except FileNotFoundError as e:
         logger.debug(f"swaymsg command not found: {e}")
+        return None
     except subprocess.TimeoutExpired as e:
         logger.debug(f"swaymsg timed out: {e}")
+        return None
+
+    if result.returncode != 0:
+        logger.debug(f"swaymsg exited with code {result.returncode}.")
+        return None
+
+    try:
+        outputs = typing.cast(list[SwayOutput], json.loads(result.stdout))
     except json.JSONDecodeError as e:
         logger.debug(f"Failed to parse swaymsg JSON output: {e}")
+        return None
+
+    try:
+        focused_name = next(
+            # Sometimes the dict has no 'focused' key.
+            (output["name"] for output in outputs if output.get("focused")),
+            None,
+        )
     except (KeyError, TypeError, AttributeError) as e:
         logger.debug(f"Unexpected output format from swaymsg: {e}")
+        return None
+
+    if focused_name:
+        logger.debug(f"Sway reports focused output: {focused_name}.")
+        return focused_name
+
     return None
 
 
