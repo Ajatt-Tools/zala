@@ -111,6 +111,7 @@ def grab_window_wayland(screen: QScreen, subprocess_timeout_sec: int = SUBPROCES
     A CaptureScreenError is raised if none of the tools are available.
     """
     with zala_temp_file(suffix=".png") as tmp_path:
+        cmd: list[str]
         match find_wayland_screenshot_program():
             case "grim":
                 # 'grim -o' captures exactly the named output at native resolution.
