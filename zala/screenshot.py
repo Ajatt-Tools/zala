@@ -155,7 +155,12 @@ class ZalaScreenshot:
         return self._app.screens()
 
     def capture_screen(self, index: int | None = None) -> TakenScreenshot:
-        """Capture a screenshot from the screen at the given index, or the screen under the cursor if None."""
+        """
+        Capture a screenshot from the screen at the given index, or the screen under the cursor if None.
+
+        Args:
+            index: Screen index to capture, or None to capture the screen under the cursor.
+        """
         screens = self.find_available_screens()
         debug_screens(screens)
         try:
@@ -168,4 +173,5 @@ class ZalaScreenshot:
         if pixmap.isNull():
             raise CaptureScreenError("failed to take screenshot. pixmap is null")
         logger.debug(f"Screen {target_screen.name()} taken.")
+
         return TakenScreenshot(pixmap, target_screen)
