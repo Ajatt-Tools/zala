@@ -105,6 +105,7 @@ class ScreenshotPreview(QGraphicsView):
     _rubber_band: UserSelectionRubberBand
     _pan_start: QPoint | None
     _help_label: ZalaHelpLabel
+    _pattern_overlay: QGraphicsRectItem
 
     selection_finished = pyqtSignal(UserSelectionResult)
     selection_aborted = pyqtSignal()
@@ -143,7 +144,7 @@ class ScreenshotPreview(QGraphicsView):
 
         # Draw scene
         self._scene.addPixmap(self._padded.pixmap)
-        self._fill_viewport_with_pattern()
+        self._pattern_overlay = self._fill_viewport_with_pattern()
         self.setSceneRect(self._padded.pixmap.rect().toRectF())
         self._center_on_content()
 
@@ -259,9 +260,19 @@ class ScreenshotPreview(QGraphicsView):
         """Emit the selection result with the captured pixmap if the region is large enough."""
         rect = self._rubber_band.geometry()
         if self._opts.rect_has_sufficient_size(rect):
-            q_emit(self.selection_finished, UserSelectionResult(pixmap=self.grab(rect), rect=rect))
+            q_emit(self.selection_finished, UserSelectionResult(pixmap=self._grab_selected_area(rect), rect=rect))
         else:
             q_emit(self.selection_finished, UserSelectionResult(error="Region is too small."))
+
+    def _grab_selected_area(self, rect: QRect) -> QPixmap:
+        """
+        Grab the selected area from the viewport, excluding the pattern overlay.
+
+        The pattern overlay is hidden before grabbing since it's only for visual feedback.
+        It's not unhidden afterward because the window closes immediately after emission.
+        """
+        self._pattern_overlay.hide()
+        return self.grab(rect)
 
     def _zoom_screenshot_preview(self, event: QWheelEvent) -> None:
         """
