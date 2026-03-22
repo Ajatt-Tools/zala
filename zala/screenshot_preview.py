@@ -7,7 +7,7 @@ import dataclasses
 import typing
 from typing import Self
 
-from PyQt6.QtCore import QRect, Qt, pyqtSignal, QSize
+from PyQt6.QtCore import QPoint, QRect, Qt, pyqtSignal, QSize
 from PyQt6.QtGui import (
     QKeyEvent,
     QMouseEvent,
@@ -66,6 +66,7 @@ class ScreenshotPreview(QGraphicsView):
     _scene: QGraphicsScene
     _taken: TakenScreenshot
     _rubber_band: UserSelectionRubberBand
+    _pan_start: QPoint | None
 
     selection_finished = pyqtSignal(UserSelectionResult)
     selection_aborted = pyqtSignal()
@@ -91,6 +92,7 @@ class ScreenshotPreview(QGraphicsView):
         )
         self._scene = QGraphicsScene(self)
         self._rubber_band = UserSelectionRubberBand(self, opts=opts)
+        self._pan_start = None
 
         # Set properties
         self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
@@ -140,27 +142,43 @@ class ScreenshotPreview(QGraphicsView):
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """
         Begin rubber band selection on left mouse button press.
+        Begin panning on right mouse button press.
 
         Reference: https://doc.qt.io/qt-6/qrubberband.html#details
         """
         if event.button() == Qt.MouseButton.LeftButton:
             self._rubber_band.set_selection_start(event.pos())
             self._rubber_band.show()
+        elif event.button() == Qt.MouseButton.RightButton:
+            self._pan_start = event.pos()
         return super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        """Update rubber band selection as the mouse moves while the left button is held."""
+        """
+        Update rubber band selection as the mouse moves while the left button is held.
+        Pan the view while the right button is held.
+        """
         if event.buttons() & Qt.MouseButton.LeftButton:
             self._rubber_band.set_selection_end(event.pos())
             self._rubber_band.show()
+        elif event.buttons() & Qt.MouseButton.RightButton and self._pan_start is not None:
+            delta = event.pos() - self._pan_start
+            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
+            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
+            self._pan_start = event.pos()
         return super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        """Finalize the rubber band selection on left mouse button release and emit the selected region."""
+        """
+        Finalize the rubber band selection on left mouse button release and emit the selected region.
+        End panning on right mouse button release.
+        """
         if event.button() == Qt.MouseButton.LeftButton:
             self._rubber_band.set_selection_end(event.pos())
             self._rubber_band.hide()
             self._emit_selection_result()
+        elif event.button() == Qt.MouseButton.RightButton and self._pan_start is not None:
+            self._pan_start = None
         return super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
