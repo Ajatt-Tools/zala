@@ -200,10 +200,7 @@ class ScreenshotPreview(QGraphicsView):
 
     def _emit_selection_result(self) -> None:
         rect = self._rubber_band.geometry()
-        if (
-            rect.width() >= self._opts.min_selection_size.width()
-            and rect.height() >= self._opts.min_selection_size.height()
-        ):
+        if self._opts.rect_has_sufficient_size(rect):
             q_emit(self.selection_finished, UserSelectionResult(pixmap=self.grab(rect), rect=rect))
         else:
             q_emit(self.selection_finished, UserSelectionResult(error="Region is too small."))
