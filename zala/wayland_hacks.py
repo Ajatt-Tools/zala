@@ -145,6 +145,8 @@ def grab_window_wayland(screen: QScreen, subprocess_timeout_sec: int = SUBPROCES
 
 
 class SwayOutput(typing.TypedDict):
+    """TypedDict representing a Sway output entry from swaymsg get_outputs."""
+
     focused: bool
     name: str
 
