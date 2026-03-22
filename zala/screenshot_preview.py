@@ -36,6 +36,8 @@ from zala.utils import clamp, make_brush, make_solid_pen, q_emit
 
 @dataclasses.dataclass
 class PreviewState:
+    """Holds the current zoom and rotation state for the screenshot preview view."""
+
     zoom: float = 1.0
     rotation: float = 0.0
 
@@ -48,10 +50,12 @@ class PreviewState:
         return view
 
     def set_zoom(self, new_scale: float) -> Self:
+        """Set the zoom level to the given scale value."""
         self.zoom = new_scale
         return self
 
     def set_rotation(self, rotation: float) -> Self:
+        """Set the rotation angle in degrees."""
         self.rotation = rotation
         return self
 

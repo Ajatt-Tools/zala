@@ -21,6 +21,8 @@ from zala.wayland_hacks import (
 
 
 class PaddedPixmap(typing.NamedTuple):
+    """A pixmap with padding metadata, containing the padded pixmap and the padding size applied."""
+
     pixmap: QPixmap
     padding_size: int
 
