@@ -22,6 +22,7 @@ class ScreenshotPreviewOpts:
     fill_brush_color: QColor = dataclasses.field(default_factory=lambda: QColor(127, 127, 127, 85))
     fill_brush_pattern: Qt.BrushStyle = dataclasses.field(default_factory=lambda: Qt.BrushStyle.Dense7Pattern)
     min_selection_size: QSize = dataclasses.field(default_factory=lambda: QSize(10, 10))
+    show_help: bool = True
 
     def rect_has_sufficient_size(self, rect: QRect) -> bool:
         """

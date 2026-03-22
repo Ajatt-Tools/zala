@@ -62,7 +62,7 @@ class ZalaHelpLabel(QLabel):
         )
         return self
 
-    def setup_help_label(self, viewport: QWidget) -> Self:
+    def setup_help_label(self, viewport: QWidget, is_visible: bool = True) -> Self:
         """
         Create and configure the help label at the bottom of the viewport.
         https://doc.qt.io/qt-6/qwidget.html#adjustSize
@@ -70,9 +70,10 @@ class ZalaHelpLabel(QLabel):
         self.show()
         self.adjustSize()
         self.position_help_label(viewport)
+        self.setVisible(is_visible)
         return self
 
-    def toggle_help_label(self) -> Self:
+    def toggle_visibility(self) -> Self:
         """Toggle the visibility of the help label."""
         self.setVisible(not self.isVisible())
         return self

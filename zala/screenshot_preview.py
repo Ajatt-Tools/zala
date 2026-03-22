@@ -131,7 +131,7 @@ class ScreenshotPreview(QGraphicsView):
         self._scene = QGraphicsScene(self)
         self._rubber_band = UserSelectionRubberBand(self, opts=opts)
         self._pan_start = None
-        self._help_label = ZalaHelpLabel(self).setup_help_label(self.viewport())
+        self._help_label = ZalaHelpLabel(self).setup_help_label(self.viewport(), is_visible=opts.show_help)
 
         # Set properties
         self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
@@ -188,7 +188,7 @@ class ScreenshotPreview(QGraphicsView):
                 q_emit(self.selection_aborted)
             case Qt.Key.Key_I:
                 # 'i' for info
-                self._help_label.toggle_help_label()
+                self._help_label.toggle_visibility()
         return super().keyPressEvent(event)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
