@@ -46,6 +46,7 @@ def generate_output_file_path() -> pathlib.Path:
 
 
 def make_solid_pen(color: QColor, thickness: int) -> QPen:
+    """Create a solid line pen with the given color and thickness."""
     # Pen
     pen = QPen()
     # Reference: https://doc.qt.io/qt-6/qt.html#PenStyle-enum
@@ -59,6 +60,7 @@ def make_solid_pen(color: QColor, thickness: int) -> QPen:
 
 @contextmanager
 def zala_temp_file(suffix: str = ".png") -> Iterable[pathlib.Path]:
+    """Create a temporary file that is automatically deleted when the context exits."""
     tmp_fd, tmp_path = tempfile.mkstemp(suffix=suffix)
     os.close(tmp_fd)
     tmp_path = pathlib.Path(tmp_path)
@@ -80,4 +82,5 @@ def make_brush(pattern: Qt.BrushStyle, color: QColor) -> QBrush:
 
 
 def clamp[T: float | int](min_val: T, val: T, max_val: T) -> T:
+    """Clamp a value between a minimum and maximum bound."""
     return max(min_val, min(val, max_val))
