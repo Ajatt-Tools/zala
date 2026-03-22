@@ -29,7 +29,6 @@ class ZalaSelect(QMainWindow):
 
     _taken: TakenScreenshot
     _user_selected: UserSelectionResult
-    _min_selection_size: QSize = QSize(10, 10)
 
     selection_finished = pyqtSignal(UserSelectionResult)
 
@@ -46,7 +45,7 @@ class ZalaSelect(QMainWindow):
         self._taken = screen
         self._set_fullscreen_settings()
         self._init_ui()
-        self._preview = ScreenshotPreview(screen_pixmap=self._taken.pixmap, parent=self, opts=opts)
+        self._preview = ScreenshotPreview(taken=self._taken, parent=self, opts=opts)
         self.setCentralWidget(self._preview)
         qconnect(self._preview.selection_finished, self._handle_selection_finished)
         qconnect(self._preview.selection_aborted, self._handle_selection_aborted)
@@ -100,17 +99,13 @@ class ZalaSelect(QMainWindow):
             q_emit(self.selection_finished, self._user_selected)
         return super().closeEvent(event)
 
-    def _handle_selection_finished(self, selection: QRect) -> bool:
+    def _handle_selection_finished(self, selection: UserSelectionResult) -> bool:
         """Process a completed selection: crop the pixmap if the region is large enough, then close."""
-        logger.debug("Region selection finished.")
-        if (
-            selection.width() >= self._min_selection_size.width()
-            and selection.height() >= self._min_selection_size.height()
-        ):
-            self._user_selected = UserSelectionResult(pixmap=self._taken.pixmap.copy(selection))
+        self._user_selected = selection
+        if selection.pixmap:
+            logger.debug(f"Selection finished: {repr_pixmap(selection.pixmap)}")
         else:
-            self._user_selected = UserSelectionResult(error="region is too small")
-            logger.debug(f"Region is too small.")
+            logger.debug(selection.error.capitalize())
         return self.close()  # self.closeEvent() will fire.
 
     def _handle_selection_aborted(self) -> bool:

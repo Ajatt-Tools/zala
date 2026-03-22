@@ -64,15 +64,15 @@ class ScreenshotPreview(QGraphicsView):
     """Fullscreen graphics view that displays a screenshot and handles region selection via rubber band."""
 
     _scene: QGraphicsScene
-    _screen_pixmap: QPixmap
+    _taken: TakenScreenshot
     _rubber_band: UserSelectionRubberBand
 
-    selection_finished = pyqtSignal(QRect)
+    selection_finished = pyqtSignal(UserSelectionResult)
     selection_aborted = pyqtSignal()
 
     def __init__(
         self,
-        screen_pixmap: QPixmap,
+        taken: TakenScreenshot,
         parent: QWidget | None = None,
         opts: ScreenshotPreviewOpts | None = None,
         zoomopts: ZoomOpts | None = None,
@@ -84,7 +84,11 @@ class ScreenshotPreview(QGraphicsView):
         self._opts = opts or ScreenshotPreviewOpts()
         self._zoomopts = zoomopts or ZoomOpts()
         self._state = PreviewState()
-        self._screen_pixmap = screen_pixmap
+        self._taken = taken
+        self._padded = add_padding(
+            self._taken.pixmap,
+            padding_size=max(taken.pixmap.width(), taken.pixmap.height()),
+        )
         self._scene = QGraphicsScene(self)
         self._rubber_band = UserSelectionRubberBand(self, opts=opts)
 
@@ -97,9 +101,10 @@ class ScreenshotPreview(QGraphicsView):
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
 
         # Draw scene
-        self._scene.addPixmap(self._screen_pixmap)
+        self._scene.addPixmap(self._padded.pixmap)
         self._fill_viewport_with_pattern()
-        self.setSceneRect(self._screen_pixmap.rect().toRectF())
+        self.setSceneRect(self._padded.pixmap.rect().toRectF())
+        self._center_on_content()
 
     def _fill_viewport_with_pattern(self) -> QGraphicsRectItem:
         """
@@ -108,12 +113,18 @@ class ScreenshotPreview(QGraphicsView):
         Note: The border is drawn separately as a fixed viewport-level overlay in paintEvent so it stays visible at any zoom level.
         Unset pen to avoid drawing the border here.
         """
-
         return self._scene.addRect(
-            self._screen_pixmap.rect().toRectF(),
+            self._taken.pixmap.rect().toRectF(),
             QPen(Qt.PenStyle.NoPen),
             make_brush(self._opts.fill_brush_pattern, self._opts.fill_brush_color),
         )
+
+    def _center_on_content(self) -> None:
+        """Center the view on the actual screenshot content, skipping the padding bars."""
+
+        center_x = self._padded.padding_size + self._taken.pixmap.width() / 2
+        center_y = self._padded.padding_size + self._taken.pixmap.height() / 2
+        self.centerOn(center_x, center_y)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """
@@ -149,7 +160,7 @@ class ScreenshotPreview(QGraphicsView):
         if event.button() == Qt.MouseButton.LeftButton:
             self._rubber_band.set_selection_end(event.pos())
             self._rubber_band.hide()
-            q_emit(self.selection_finished, self._current_scene_rectangle())
+            self._emit_selection_result()
         return super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
@@ -169,15 +180,15 @@ class ScreenshotPreview(QGraphicsView):
         super().paintEvent(event)
         self._draw_viewport_border()
 
-    def _current_scene_rectangle(self) -> QRect:
-        """
-        Map rubber band rect from view (widget) coordinates to scene coordinates.
-        This ensures the correct image region is selected when the view is zoomed.
-
-        https://doc.qt.io/qt-6/qgraphicsview.html#mapToScene-3
-        https://doc.qt.io/qt-6/qpolygonf.html#boundingRect
-        """
-        return self.mapToScene(self._rubber_band.geometry()).boundingRect().toRect()
+    def _emit_selection_result(self) -> None:
+        rect = self._rubber_band.geometry()
+        if (
+            rect.width() >= self._opts.min_selection_size.width()
+            and rect.height() >= self._opts.min_selection_size.height()
+        ):
+            q_emit(self.selection_finished, UserSelectionResult(pixmap=self.grab(rect), rect=rect))
+        else:
+            q_emit(self.selection_finished, UserSelectionResult(error="Region is too small."))
 
     def _zoom_screenshot_preview(self, event: QWheelEvent) -> None:
         """

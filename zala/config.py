@@ -5,7 +5,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QColor
 
 
@@ -21,6 +21,7 @@ class ScreenshotPreviewOpts:
     outline_color: QColor = dataclasses.field(default_factory=lambda: QColor(255, 0, 0))
     fill_brush_color: QColor = dataclasses.field(default_factory=lambda: QColor(127, 127, 127, 85))
     fill_brush_pattern: Qt.BrushStyle = dataclasses.field(default_factory=lambda: Qt.BrushStyle.Dense7Pattern)
+    min_selection_size: QSize = dataclasses.field(default_factory=lambda: QSize(10, 10))
 
 
 @dataclasses.dataclass

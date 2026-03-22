@@ -60,6 +60,11 @@ def repr_screen(screen: QScreen) -> str:
     return f"Name {screen.name()}. Position {top_left.x(), top_left.y()}. Size {size.width()}x{size.height()}."
 
 
+def repr_pixmap(pixmap: QPixmap) -> str:
+    """Return a human-readable string describing the pixmap's size."""
+    return f"Pixmap size {pixmap.width()}x{pixmap.height()}."
+
+
 def debug_screens(screens: Sequence[QScreen]) -> None:
     """Log debug information about each available screen."""
     logger.debug(f"Found {len(screens)} screens.")
