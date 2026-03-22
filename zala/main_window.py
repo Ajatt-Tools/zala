@@ -95,7 +95,7 @@ class ZalaSelect(QMainWindow):
         # Restore cursor
         QApplication.restoreOverrideCursor()
         if self._user_selected.is_empty():
-            q_emit(self.selection_finished, UserSelectionResult(error="selection aborted"))
+            q_emit(self.selection_finished, UserSelectionResult(error="Selection aborted."))
         else:
             q_emit(self.selection_finished, self._user_selected)
         return super().closeEvent(event)
