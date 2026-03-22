@@ -16,7 +16,7 @@ class UserSelectionRubberBand(QRubberBand):
     Rubber band that is shown when the user selects an area of the pixmap.
     """
 
-    _selection_start: QPoint = QPoint()
+    _selection_start: QPoint | None = None
     _opts: ScreenshotPreviewOpts
 
     def __init__(
@@ -28,7 +28,16 @@ class UserSelectionRubberBand(QRubberBand):
         """Initialize the rubber band with optional shape and styling options."""
         super().__init__(shape, parent)
         self._opts = opts or ScreenshotPreviewOpts()
+        self._selection_start = None
         self.hide()
+
+    def has_selection_start(self) -> bool:
+        """Return True if a selection start point has been set."""
+        return self._selection_start is not None
+
+    def reset_start_point(self) -> None:
+        """Clear the selection start point."""
+        self._selection_start = None
 
     def set_border(self, color: QColor, thickness: int) -> None:
         """Set the border color and thickness for the rubber band."""
@@ -69,4 +78,6 @@ class UserSelectionRubberBand(QRubberBand):
 
     def set_selection_end(self, point: QPoint) -> None:
         """Set the ending point of the selection and update the geometry to the normalized rectangle."""
-        self.setGeometry(QRect(self._selection_start, point).normalized())
+        # https://doc.qt.io/qt-6/qrect.html#normalized
+        if self.has_selection_start():
+            self.setGeometry(QRect(self._selection_start, point).normalized())
