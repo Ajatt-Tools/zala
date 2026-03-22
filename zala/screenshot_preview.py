@@ -72,6 +72,31 @@ class UserSelectionResult(typing.NamedTuple):
         return not (self.pixmap or self.error)
 
 
+class ZalaAction(enum.Enum):
+    """Enumeration of possible user actions during preview interaction."""
+
+    pan = enum.auto()
+    selection = enum.auto()
+    none = enum.auto()
+
+
+class ZalaMouseButton(enum.Enum):
+    """Enumeration of mouse buttons used for preview interaction."""
+
+    left = enum.auto()
+    right = enum.auto()
+    none = enum.auto()
+
+
+def get_pressed_button(event: QMouseEvent) -> ZalaMouseButton:
+    """Return which mouse button is currently pressed in the event."""
+    if event.buttons() & Qt.MouseButton.LeftButton:
+        return ZalaMouseButton.left
+    if event.buttons() & Qt.MouseButton.RightButton:
+        return ZalaMouseButton.right
+    return ZalaMouseButton.none
+
+
 class ScreenshotPreview(QGraphicsView):
     """Fullscreen graphics view that displays a screenshot and handles region selection via rubber band."""
 
@@ -79,6 +104,7 @@ class ScreenshotPreview(QGraphicsView):
     _taken: TakenScreenshot
     _rubber_band: UserSelectionRubberBand
     _pan_start: QPoint | None
+    _help_label: ZalaHelpLabel
 
     selection_finished = pyqtSignal(UserSelectionResult)
     selection_aborted = pyqtSignal()
@@ -105,6 +131,7 @@ class ScreenshotPreview(QGraphicsView):
         self._scene = QGraphicsScene(self)
         self._rubber_band = UserSelectionRubberBand(self, opts=opts)
         self._pan_start = None
+        self._help_label = ZalaHelpLabel(self).setup_help_label(self.viewport())
 
         # Set properties
         self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
@@ -140,6 +167,14 @@ class ScreenshotPreview(QGraphicsView):
         center_y = self._padded.padding_size + self._taken.pixmap.height() / 2
         self.centerOn(center_x, center_y)
 
+    def _ongoing_action(self) -> ZalaAction:
+        """Return the current user action based on rubber band and pan state."""
+        if self._rubber_band.has_selection_start():
+            return ZalaAction.selection
+        if self._pan_start is not None:
+            return ZalaAction.pan
+        return ZalaAction.none
+
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """
         Key is pressed, but not released.
@@ -147,8 +182,13 @@ class ScreenshotPreview(QGraphicsView):
 
         Reference: https://doc.qt.io/qt-6/qwidget.html#keyPressEvent
         """
-        if event.key() == Qt.Key.Key_Escape:
-            q_emit(self.selection_aborted)
+        match event.key():
+            case Qt.Key.Key_Escape | Qt.Key.Key_Q:
+                # 'q' for quit
+                q_emit(self.selection_aborted)
+            case Qt.Key.Key_I:
+                # 'i' for info
+                self._help_label.toggle_help_label()
         return super().keyPressEvent(event)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
@@ -158,11 +198,12 @@ class ScreenshotPreview(QGraphicsView):
 
         Reference: https://doc.qt.io/qt-6/qrubberband.html#details
         """
-        if event.button() == Qt.MouseButton.LeftButton:
-            self._rubber_band.set_selection_start(event.pos())
-            self._rubber_band.show()
-        elif event.button() == Qt.MouseButton.RightButton:
-            self._pan_start = event.pos()
+        match event.button():
+            case Qt.MouseButton.LeftButton:
+                self._rubber_band.set_selection_start(event.pos())
+                self._rubber_band.show()
+            case Qt.MouseButton.RightButton:
+                self._pan_start = event.pos()
         return super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
@@ -170,14 +211,15 @@ class ScreenshotPreview(QGraphicsView):
         Update rubber band selection as the mouse moves while the left button is held.
         Pan the view while the right button is held.
         """
-        if event.buttons() & Qt.MouseButton.LeftButton:
-            self._rubber_band.set_selection_end(event.pos())
-            self._rubber_band.show()
-        elif event.buttons() & Qt.MouseButton.RightButton and self._pan_start is not None:
-            delta = event.pos() - self._pan_start
-            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
-            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
-            self._pan_start = event.pos()
+        match get_pressed_button(event), self._ongoing_action():
+            case ZalaMouseButton.left, ZalaAction.selection:
+                self._rubber_band.set_selection_end(event.pos())
+                self._rubber_band.show()
+            case ZalaMouseButton.right, ZalaAction.pan:
+                delta = event.pos() - self._pan_start
+                self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
+                self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
+                self._pan_start = event.pos()
         return super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
@@ -185,12 +227,15 @@ class ScreenshotPreview(QGraphicsView):
         Finalize the rubber band selection on left mouse button release and emit the selected region.
         End panning on right mouse button release.
         """
-        if event.button() == Qt.MouseButton.LeftButton:
-            self._rubber_band.set_selection_end(event.pos())
-            self._rubber_band.hide()
-            self._emit_selection_result()
-        elif event.button() == Qt.MouseButton.RightButton and self._pan_start is not None:
-            self._pan_start = None
+        match event.button(), self._ongoing_action():
+            case Qt.MouseButton.LeftButton, ZalaAction.selection:
+                self._rubber_band.set_selection_end(event.pos())
+                self._rubber_band.hide()
+                self._emit_selection_result()
+                self._rubber_band.reset_start_point()
+            case Qt.MouseButton.RightButton, ZalaAction.pan:
+                self._pan_start = None
+
         return super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
@@ -211,6 +256,7 @@ class ScreenshotPreview(QGraphicsView):
         self._draw_viewport_border()
 
     def _emit_selection_result(self) -> None:
+        """Emit the selection result with the captured pixmap if the region is large enough."""
         rect = self._rubber_band.geometry()
         if self._opts.rect_has_sufficient_size(rect):
             q_emit(self.selection_finished, UserSelectionResult(pixmap=self.grab(rect), rect=rect))
@@ -271,3 +317,8 @@ class ScreenshotPreview(QGraphicsView):
         painter.setPen(make_solid_pen(self._opts.outline_color, thickness))
         painter.drawRect(viewport.rect().adjusted(half_thickness, half_thickness, -half_thickness, -half_thickness))
         painter.end()
+
+    def resizeEvent(self, event: QResizeEvent | None) -> None:
+        """Reposition the help label when the viewport is resized."""
+        super().resizeEvent(event)
+        self._help_label.position_help_label(self.viewport())
