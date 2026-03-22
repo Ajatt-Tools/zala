@@ -45,6 +45,10 @@ class ZalaTakeScreenRegion:
         Captures the current screen, creates a ZalaSelect window with the captured
         image, and connects the provided callback to the selection‑finished signal.
         The window is shown full‑screen.
+
+        Args:
+            on_finish: Callback called when selection is complete.
+            opts: Configuration options for the preview widget.
         """
         self._sel = ZalaSelect(self._scr.capture_screen(), opts=opts)
         self._sel.selection_finished.connect(on_finish)
