@@ -35,6 +35,8 @@ class ScreenshotPreviewOpts:
 
 @dataclasses.dataclass
 class ZoomOpts:
+    """Configuration options for zoom and rotation behavior in the preview."""
+
     zoom_in_factor: float = 1.25
     zoom_out_factor: float = 1.0 / 1.25  # zoom out by 0.8
     min_zoom: float = 1.0
