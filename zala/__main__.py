@@ -15,13 +15,13 @@ from zala.config import ScreenshotPreviewOpts
 from zala.consts import APP_LOGO_PATH, APP_NAME
 from zala.exceptions import ZalaException
 from zala.main_window import ZalaSelect
-from zala.screenshot_preview import UserSelectionResult
 from zala.screenshot import (
     ZalaScreenshot,
     find_screen_with_cursor,
     repr_screen,
     save_screenshot,
 )
+from zala.screenshot_preview import UserSelectionResult
 from zala.take_region import ZalaTakeScreenRegion
 
 

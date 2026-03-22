@@ -5,7 +5,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
 
-from PyQt6.QtCore import Qt, QSize, QRect
+from PyQt6.QtCore import QRect, QSize, Qt
 from PyQt6.QtGui import QColor
 
 

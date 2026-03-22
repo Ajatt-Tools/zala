@@ -9,8 +9,8 @@ from loguru import logger
 
 from zala.config import ScreenshotPreviewOpts
 from zala.main_window import ZalaSelect
-from zala.screenshot_preview import UserSelectionResult
 from zala.screenshot import ZalaScreenshot
+from zala.screenshot_preview import UserSelectionResult
 
 
 class ZalaTakeScreenRegion:

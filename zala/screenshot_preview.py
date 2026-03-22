@@ -4,10 +4,11 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
 import dataclasses
+import enum
 import typing
 from typing import Self
 
-from PyQt6.QtCore import QPoint, QRect, Qt, pyqtSignal, QSize
+from PyQt6.QtCore import QPoint, QRect, Qt, pyqtSignal
 from PyQt6.QtGui import (
     QKeyEvent,
     QMouseEvent,
@@ -15,14 +16,21 @@ from PyQt6.QtGui import (
     QPaintEvent,
     QPen,
     QPixmap,
+    QResizeEvent,
     QTransform,
     QWheelEvent,
 )
-from PyQt6.QtWidgets import QGraphicsRectItem, QGraphicsScene, QGraphicsView, QWidget
+from PyQt6.QtWidgets import (
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QGraphicsView,
+    QWidget,
+)
 
 from zala.config import ScreenshotPreviewOpts, ZoomOpts
+from zala.help_label import ZalaHelpLabel
 from zala.rubber_band import UserSelectionRubberBand
-from zala.screenshot import add_padding, TakenScreenshot
+from zala.screenshot import TakenScreenshot, add_padding
 from zala.utils import clamp, make_brush, make_solid_pen, q_emit
 
 
