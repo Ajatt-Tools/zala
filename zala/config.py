@@ -23,6 +23,7 @@ class ScreenshotPreviewOpts:
     fill_brush_pattern: Qt.BrushStyle = dataclasses.field(default_factory=lambda: Qt.BrushStyle.Dense7Pattern)
     min_selection_size: QSize = dataclasses.field(default_factory=lambda: QSize(10, 10))
     show_help: bool = True
+    draw_overlay_mesh: bool = True
 
     def rect_has_sufficient_size(self, rect: QRect) -> bool:
         """

@@ -105,7 +105,7 @@ class ScreenshotPreview(QGraphicsView):
     _rubber_band: UserSelectionRubberBand
     _pan_start: QPoint | None
     _help_label: ZalaHelpLabel
-    _pattern_overlay: QGraphicsRectItem
+    _pattern_overlay: QGraphicsRectItem | None
 
     selection_finished = pyqtSignal(UserSelectionResult)
     selection_aborted = pyqtSignal()
@@ -148,13 +148,15 @@ class ScreenshotPreview(QGraphicsView):
         self.setSceneRect(self._padded.pixmap.rect().toRectF())
         self._center_on_content()
 
-    def _fill_viewport_with_pattern(self) -> QGraphicsRectItem:
+    def _fill_viewport_with_pattern(self) -> QGraphicsRectItem | None:
         """
         Add fill overlay to the scene.
 
         Note: The border is drawn separately as a fixed viewport-level overlay in paintEvent so it stays visible at any zoom level.
         Unset pen to avoid drawing the border here.
         """
+        if not self._opts.draw_overlay_mesh:
+            return None
         return self._scene.addRect(
             self._padded.pixmap.rect().toRectF(),
             QPen(Qt.PenStyle.NoPen),
@@ -271,7 +273,8 @@ class ScreenshotPreview(QGraphicsView):
         The pattern overlay is hidden before grabbing since it's only for visual feedback.
         It's not unhidden afterward because the window closes immediately after emission.
         """
-        self._pattern_overlay.hide()
+        if self._pattern_overlay:
+            self._pattern_overlay.hide()
         return self.grab(rect)
 
     def _zoom_screenshot_preview(self, event: QWheelEvent) -> None:
