@@ -35,9 +35,12 @@ QLabel {
 
 
 class ZalaHelpLabel(QLabel):
+    """A help label widget that displays keyboard/mouse controls at the bottom of the viewport."""
+
     _bottom_padding: int = 10
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Initialize the help label with default text and styling."""
         super().__init__(parent)
         self.setText(HELP_TEXT)
         self.setStyleSheet(LABEL_CSS)
