@@ -155,7 +155,7 @@ class ScreenshotPreview(QGraphicsView):
         Unset pen to avoid drawing the border here.
         """
         return self._scene.addRect(
-            self._taken.pixmap.rect().toRectF(),
+            self._padded.pixmap.rect().toRectF(),
             QPen(Qt.PenStyle.NoPen),
             make_brush(self._opts.fill_brush_pattern, self._opts.fill_brush_color),
         )
