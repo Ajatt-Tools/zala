@@ -20,6 +20,38 @@ from zala.wayland_hacks import (
 )
 
 
+class PaddedPixmap(typing.NamedTuple):
+    pixmap: QPixmap
+    padding_size: int
+
+
+def add_padding(pixmap: QPixmap, padding_size: int, padding_color: QColor = QColor(128, 128, 128)) -> PaddedPixmap:
+    """
+    Add gray padding bars on all sides of the image.
+    This prevents incorrect/glitchy rotation.
+
+    Args:
+        pixmap: The original pixmap to pad.
+        padding_size: How many pixels to pad on each side.
+        padding_color: The color for padding bars (default: gray #808080).
+
+    Returns:
+        A new pixmap with padding added on all sides.
+    """
+    new_width = pixmap.width() + 2 * padding_size
+    new_height = pixmap.height() + 2 * padding_size
+
+    padded = QPixmap(new_width, new_height)
+    padded.fill(padding_color)
+
+    painter = QPainter(padded)
+    painter.drawPixmap(padding_size, padding_size, pixmap)
+    painter.end()
+
+    logger.debug(f"Added padding of {padding_size} pixels on all sides.")
+    return PaddedPixmap(pixmap=padded, padding_size=padding_size)
+
+
 def repr_screen(screen: QScreen) -> str:
     """Return a human-readable string describing the screen's name, position, and size."""
     geometry = screen.geometry()
