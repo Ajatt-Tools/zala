@@ -11,4 +11,6 @@ class ZalaException(Exception):
 
 
 class CaptureScreenError(ZalaException):
+    """Raised when screen capture fails due to system or tool errors."""
+
     pass
