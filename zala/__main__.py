@@ -105,6 +105,7 @@ class CLI:
             fill_color: Rubber band fill color as "#RRGGBB" or "#AARRGGBB" hex string. Alpha first.
             outline_color: Screen overlay outline color as "#RRGGBB" or "#AARRGGBB" hex string. Alpha first.
             fill_brush_color: Screen overlay fill color as "#RRGGBB" or "#AARRGGBB" hex string. Alpha first.
+            fill_brush_pattern: Brush pattern for the screen overlay fill. See Qt.BrushStyle enum.
         """
 
         preview_opts = ScreenshotPreviewOpts(
