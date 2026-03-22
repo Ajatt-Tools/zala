@@ -8,12 +8,11 @@ import os
 import pathlib
 import tempfile
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from contextlib import contextmanager
-from typing import Iterable
 
-from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, Qt
-from PyQt6.QtGui import QPen, QColor, QBrush
+from PyQt6.QtCore import Qt, pyqtBoundSignal, pyqtSignal
+from PyQt6.QtGui import QBrush, QColor, QPen
 
 from zala.exceptions import ZalaException
 

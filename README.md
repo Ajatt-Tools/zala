@@ -37,7 +37,8 @@ The example below shows how to capture a screenshot and let the user select a re
 import sys
 
 from PyQt6.QtWidgets import QApplication
-from zala.main_window import ZalaSelect, UserSelectionResult
+from zala.main_window import ZalaSelect
+from zala.screenshot_preview import UserSelectionResult
 from zala.screenshot import ZalaScreenshot
 
 

@@ -2,16 +2,28 @@
 Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
+
 import dataclasses
+import typing
 from typing import Self
 
-from PyQt6.QtCore import Qt, pyqtSignal, QRect
-from PyQt6.QtGui import QPen, QPixmap, QPainter, QKeyEvent, QMouseEvent, QWheelEvent, QPaintEvent, QTransform
-from PyQt6.QtWidgets import QGraphicsScene, QGraphicsRectItem, QGraphicsView, QWidget
+from PyQt6.QtCore import QRect, Qt, pyqtSignal, QSize
+from PyQt6.QtGui import (
+    QKeyEvent,
+    QMouseEvent,
+    QPainter,
+    QPaintEvent,
+    QPen,
+    QPixmap,
+    QTransform,
+    QWheelEvent,
+)
+from PyQt6.QtWidgets import QGraphicsRectItem, QGraphicsScene, QGraphicsView, QWidget
 
 from zala.config import ScreenshotPreviewOpts, ZoomOpts
 from zala.rubber_band import UserSelectionRubberBand
-from zala.utils import q_emit, make_solid_pen, make_brush, clamp
+from zala.screenshot import add_padding, TakenScreenshot
+from zala.utils import clamp, make_brush, make_solid_pen, q_emit
 
 
 @dataclasses.dataclass
@@ -34,6 +46,19 @@ class PreviewState:
     def set_rotation(self, rotation: float) -> Self:
         self.rotation = rotation
         return self
+
+
+class UserSelectionResult(typing.NamedTuple):
+    """Result of a user's region selection, containing a pixmap on success or an error message on failure."""
+
+    pixmap: QPixmap | None = None
+    rect: QRect | None = None
+    error: str = ""
+
+    def is_empty(self) -> bool:
+        """Return True if neither a pixmap nor an error has been set."""
+        return not (self.pixmap or self.error)
+
 
 class ScreenshotPreview(QGraphicsView):
     """Fullscreen graphics view that displays a screenshot and handles region selection via rubber band."""

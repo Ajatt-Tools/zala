@@ -7,13 +7,17 @@ import pathlib
 import typing
 from collections.abc import Sequence
 
-from loguru import logger
-from PyQt6.QtGui import QCursor, QPixmap, QScreen
+from PyQt6.QtGui import QColor, QCursor, QPainter, QPixmap, QScreen
 from PyQt6.QtWidgets import QApplication
+from loguru import logger
 
 from zala.exceptions import CaptureScreenError
 from zala.utils import generate_output_file_path
-from zala.wayland_hacks import find_focused_screen_wayland, grab_window_wayland, is_wayland
+from zala.wayland_hacks import (
+    find_focused_screen_wayland,
+    grab_window_wayland,
+    is_wayland,
+)
 
 
 def repr_screen(screen: QScreen) -> str:

@@ -8,8 +8,8 @@ import os
 import pathlib
 import shutil
 import subprocess
-from collections.abc import Sequence
 import typing
+from collections.abc import Sequence
 
 from loguru import logger
 from PyQt6.QtCore import QPoint, QRect

@@ -6,16 +6,22 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import sys
 
 import fire
-from PyQt6.QtCore import Qt
 from loguru import logger
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QCursor, QIcon
 from PyQt6.QtWidgets import QApplication
 
-from zala.consts import APP_NAME, APP_LOGO_PATH
-from zala.main_window import ZalaSelect, UserSelectionResult
 from zala.config import ScreenshotPreviewOpts
-from zala.screenshot import ZalaScreenshot, find_screen_with_cursor, repr_screen, save_screenshot
+from zala.consts import APP_LOGO_PATH, APP_NAME
 from zala.exceptions import ZalaException
+from zala.main_window import ZalaSelect
+from zala.screenshot_preview import UserSelectionResult
+from zala.screenshot import (
+    ZalaScreenshot,
+    find_screen_with_cursor,
+    repr_screen,
+    save_screenshot,
+)
 from zala.take_region import ZalaTakeScreenRegion
 
 

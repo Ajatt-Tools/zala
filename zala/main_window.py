@@ -3,9 +3,8 @@ Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 """
 
-import typing
-
-from PyQt6.QtCore import QRect, QSize, Qt, pyqtSignal
+from loguru import logger
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import (
     QCloseEvent,
     QPixmap,
@@ -15,24 +14,12 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QWidget,
 )
-from loguru import logger
 
-from zala.consts import APP_NAME
 from zala.config import ScreenshotPreviewOpts
-from zala.screenshot import TakenScreenshot
-from zala.screenshot_preview import ScreenshotPreview
-from zala.utils import qconnect, q_emit
-
-
-class UserSelectionResult(typing.NamedTuple):
-    """Result of a user's region selection, containing a pixmap on success or an error message on failure."""
-
-    pixmap: QPixmap | None = None
-    error: str = ""
-
-    def is_empty(self) -> bool:
-        """Return True if neither a pixmap nor an error has been set."""
-        return not (self.pixmap or self.error)
+from zala.consts import APP_NAME
+from zala.screenshot import TakenScreenshot, repr_pixmap
+from zala.screenshot_preview import ScreenshotPreview, UserSelectionResult
+from zala.utils import q_emit, qconnect
 
 
 class ZalaSelect(QMainWindow):
