@@ -17,6 +17,7 @@ from PyQt6.QtGui import QPixmap, QScreen
 
 from zala.consts import SUBPROCESS_TIMEOUT_SEC
 from zala.exceptions import CaptureScreenError
+from zala.screenshot import scale_rect
 from zala.utils import zala_temp_file
 
 # Wayland is SHIT. But this program has to support it because some people still use Wayland.
@@ -38,16 +39,7 @@ def screen_physical_rect(screen: QScreen) -> QRect:
     in the coordinate space of a full-desktop screenshot PNG.
     """
     # https://doc.qt.io/qt-6/qscreen.html#devicePixelRatio-prop
-    pixel_ratio = screen.devicePixelRatio()
-    geo = screen.geometry()
-    # NOTE: round() returns int.
-    # https://docs.python.org/3/library/functions.html#round
-    return QRect(
-        round(geo.x() * pixel_ratio),
-        round(geo.y() * pixel_ratio),
-        round(geo.width() * pixel_ratio),
-        round(geo.height() * pixel_ratio),
-    )
+    return scale_rect(screen.geometry(), ratio=screen.devicePixelRatio())
 
 
 def load_screenshot_pixmap(tmp_path: pathlib.Path, screen: QScreen, full_desktop: bool) -> QPixmap:

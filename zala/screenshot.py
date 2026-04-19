@@ -8,6 +8,7 @@ import typing
 from collections.abc import Sequence
 
 from loguru import logger
+from PyQt6.QtCore import QRect, QSize
 from PyQt6.QtGui import QColor, QCursor, QPainter, QPixmap, QScreen
 from PyQt6.QtWidgets import QApplication
 
@@ -55,12 +56,38 @@ def add_padding(pixmap: QPixmap, padding_size: int, padding_color: QColor = QCol
     return PaddedPixmap(pixmap=padded, padding_size=padding_size)
 
 
+def format_size(size: QSize) -> str:
+    """Format a QSize as a 'WIDTHxHEIGHT' string."""
+    return f"{size.width()}x{size.height()}"
+
+
+def scale_rect(rect: QRect, *, ratio: float) -> QRect:
+    """
+    Scale a QRect by the given ratio, converting from logical to physical coordinates.
+    NOTE: round() returns int, but round() is better than int() because it rounds to the nearest integer.
+    https://docs.python.org/3/library/functions.html#round
+    """
+    return QRect(
+        round(rect.x() * ratio),
+        round(rect.y() * ratio),
+        round(rect.width() * ratio),
+        round(rect.height() * ratio),
+    )
+
+
+def physical_screen_size(screen: QScreen) -> QSize:
+    """Return the screen's physical pixel size, accounting for the device pixel ratio."""
+    return scale_rect(screen.geometry(), ratio=screen.devicePixelRatio()).size()
+
+
 def repr_screen(screen: QScreen) -> str:
-    """Return a human-readable string describing the screen's name, position, and size."""
-    geometry = screen.geometry()
-    top_left = geometry.topLeft()
-    size = geometry.size()
-    return f"Name {screen.name()}. Position {top_left.x(), top_left.y()}. Size {size.width()}x{size.height()}."
+    """Return a human-readable string describing the screen's name, position, and physical/logical size."""
+    top_left = screen.geometry().topLeft()
+    return (
+        f"Name {screen.name()}. Position {top_left.x(), top_left.y()}. "
+        f"Size {format_size(physical_screen_size(screen))} "
+        f"(logical {format_size(screen.geometry().size())}, DPR {screen.devicePixelRatio()})."
+    )
 
 
 def repr_pixmap(pixmap: QPixmap) -> str:
