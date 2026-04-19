@@ -156,9 +156,9 @@ class ScreenshotSaveResult(typing.NamedTuple):
     file_path: pathlib.Path
 
 
-def save_screenshot(pixmap: QPixmap, output_file_path: str | None) -> ScreenshotSaveResult:
+def save_screenshot(pixmap: QPixmap, output_file_path: str | pathlib.Path | None) -> ScreenshotSaveResult:
     """Save a pixmap to disk at the given path, or generate a default path if none is provided."""
-    output_file_path = pathlib.Path(output_file_path) if output_file_path else generate_output_file_path()
+    output_file_path: pathlib.Path = pathlib.Path(output_file_path or generate_output_file_path())
     return ScreenshotSaveResult(pixmap.save(str(output_file_path)), output_file_path)
 
 
