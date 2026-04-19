@@ -120,7 +120,10 @@ class CLI:
 
         def on_finished(user_selection: UserSelectionResult) -> None:
             if not user_selection.pixmap:
-                logger.info("Selection aborted")
+                print("Selection aborted")
+                return
+            if user_selection.pixmap.isNull():
+                print("Fatal: attempt to save a null pixmap")
                 return
 
             result = save_screenshot(user_selection.pixmap, output_file_path)
