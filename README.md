@@ -80,3 +80,8 @@ Show commands.
 ```bash
 zala
 ```
+
+## Who uses Zala
+
+- [Lancet](https://github.com/Ajatt-Tools/lancet) - OCR application for reading manga in Japanese.
+- [You?](https://github.com/Ajatt-Tools/zala/pulls)
