@@ -8,12 +8,12 @@ import typing
 from collections.abc import Sequence
 
 from loguru import logger
-from PyQt6.QtCore import QRect, QSize
+from PyQt6.QtCore import QSize
 from PyQt6.QtGui import QColor, QCursor, QPainter, QPixmap, QScreen
 from PyQt6.QtWidgets import QApplication
 
 from zala.exceptions import CaptureScreenError
-from zala.utils import generate_output_file_path
+from zala.utils import generate_output_file_path, scale_rect
 from zala.wayland_hacks import (
     find_focused_screen_wayland,
     grab_window_wayland,
@@ -59,20 +59,6 @@ def add_padding(pixmap: QPixmap, padding_size: int, padding_color: QColor = QCol
 def format_size(size: QSize) -> str:
     """Format a QSize as a 'WIDTHxHEIGHT' string."""
     return f"{size.width()}x{size.height()}"
-
-
-def scale_rect(rect: QRect, *, ratio: float) -> QRect:
-    """
-    Scale a QRect by the given ratio, converting from logical to physical coordinates.
-    NOTE: round() returns int, but round() is better than int() because it rounds to the nearest integer.
-    https://docs.python.org/3/library/functions.html#round
-    """
-    return QRect(
-        round(rect.x() * ratio),
-        round(rect.y() * ratio),
-        round(rect.width() * ratio),
-        round(rect.height() * ratio),
-    )
 
 
 def physical_screen_size(screen: QScreen) -> QSize:

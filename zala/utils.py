@@ -11,7 +11,7 @@ import time
 from collections.abc import Callable, Iterable
 from contextlib import contextmanager
 
-from PyQt6.QtCore import Qt, pyqtBoundSignal, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtBoundSignal, pyqtSignal, QRect
 from PyQt6.QtGui import QBrush, QColor, QPen
 
 from zala.exceptions import ZalaException
@@ -84,3 +84,17 @@ def make_brush(pattern: Qt.BrushStyle, color: QColor) -> QBrush:
 def clamp[T: float | int](min_val: T, val: T, max_val: T) -> T:
     """Clamp a value between a minimum and maximum bound."""
     return max(min_val, min(val, max_val))
+
+
+def scale_rect(rect: QRect, *, ratio: float) -> QRect:
+    """
+    Scale a QRect by the given ratio, converting from logical to physical coordinates.
+    NOTE: round() returns int, but round() is better than int() because it rounds to the nearest integer.
+    https://docs.python.org/3/library/functions.html#round
+    """
+    return QRect(
+        round(rect.x() * ratio),
+        round(rect.y() * ratio),
+        round(rect.width() * ratio),
+        round(rect.height() * ratio),
+    )
