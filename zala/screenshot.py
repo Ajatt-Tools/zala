@@ -68,11 +68,12 @@ def physical_screen_size(screen: QScreen) -> QSize:
 
 def repr_screen(screen: QScreen) -> str:
     """Return a human-readable string describing the screen's name, position, and physical/logical size."""
-    top_left = screen.geometry().topLeft()
+    geometry = screen.geometry()
+    top_left = geometry.topLeft()
     return (
         f"Name {screen.name()}. Position {top_left.x(), top_left.y()}. "
         f"Size {format_size(physical_screen_size(screen))} "
-        f"(logical {format_size(screen.geometry().size())}, DPR {screen.devicePixelRatio()})."
+        f"(logical {format_size(geometry.size())}, DPR {screen.devicePixelRatio():g})."
     )
 
 
