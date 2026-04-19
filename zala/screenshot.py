@@ -40,6 +40,7 @@ def add_padding(pixmap: QPixmap, padding_size: int, padding_color: QColor = QCol
     Returns:
         A new pixmap with padding added on all sides.
     """
+    logger.debug(f"Pixmap of size {pixmap.width(), pixmap.height()}.")
     new_width = pixmap.width() + 2 * padding_size
     new_height = pixmap.height() + 2 * padding_size
 
