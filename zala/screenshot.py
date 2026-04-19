@@ -142,10 +142,11 @@ def find_screen_with_cursor(screens: Sequence[QScreen]) -> QScreen:
 
 
 class TakenScreenshot(typing.NamedTuple):
-    """Result of capturing a screen, holding the pixmap and the source screen."""
+    """Result of capturing a screen, holding the pixmap, the source screen, and the device pixel ratio."""
 
     pixmap: QPixmap
     screen: QScreen
+    device_pixel_ratio: float
 
 
 class ScreenshotSaveResult(typing.NamedTuple):
@@ -196,4 +197,4 @@ class ZalaScreenshot:
             raise CaptureScreenError("failed to take screenshot. pixmap is null")
         logger.debug(f"Screen {target_screen.name()} taken.")
 
-        return TakenScreenshot(pixmap, target_screen)
+        return TakenScreenshot(pixmap, target_screen, target_screen.devicePixelRatio())
