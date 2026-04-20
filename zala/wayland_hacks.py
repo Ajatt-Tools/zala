@@ -17,8 +17,7 @@ from PyQt6.QtGui import QPixmap, QScreen
 
 from zala.consts import SUBPROCESS_TIMEOUT_SEC
 from zala.exceptions import CaptureScreenError
-from zala.screenshot import scale_rect
-from zala.utils import zala_temp_file
+from zala.utils import scale_rect, zala_temp_file
 
 # Wayland is SHIT. But this program has to support it because some people still use Wayland.
 # Wayland requires ugly workarounds because Qt's screen capture API does not work under Wayland.
@@ -44,13 +43,15 @@ def screen_physical_rect(screen: QScreen) -> QRect:
 
 def load_screenshot_pixmap(tmp_path: pathlib.Path, screen: QScreen, full_desktop: bool) -> QPixmap:
     """
-    Load a screenshot PNG from tmp_path and return a QPixmap sized to
-    screen's logical (device-independent) pixel dimensions.
+    Load a screenshot PNG from tmp_path and return a QPixmap at physical resolution.
 
     When *full_desktop* is True the PNG contains the entire virtual
     desktop (all monitors combined) and must be cropped to the target screen
     before being returned.  When it is False (e.g. grim -o) the PNG
     already contains exactly the target screen.
+
+    The returned pixmap is left at its physical pixel resolution.
+    DPR normalization is handled by the caller (grab_window).
     """
     pixmap = QPixmap(str(tmp_path))
     if pixmap.isNull():
@@ -71,8 +72,7 @@ def load_screenshot_pixmap(tmp_path: pathlib.Path, screen: QScreen, full_desktop
             # https://doc.qt.io/qt-6/qpixmap.html#copy
             pixmap = pixmap.copy(crop_rect)
 
-    # Scale from physical pixels to logical pixels, mirroring the original X11/XCB path:
-    return pixmap.scaled(screen.geometry().size())
+    return pixmap
 
 
 def find_wayland_screenshot_program() -> str:

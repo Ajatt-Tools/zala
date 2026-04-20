@@ -91,20 +91,28 @@ def debug_screens(screens: Sequence[QScreen]) -> None:
 
 def grab_window(screen: QScreen) -> QPixmap:
     """
-    Capture the entire screen contents and return as a pixmap scaled to the screen geometry.
+    Capture the entire screen contents and return as a pixmap at physical resolution with DPR=1.
 
     On Wayland, QScreen.grabWindow() always returns a null pixmap.
     In that case, try other screenshot programs found in the system.
 
+    The returned pixmap is normalized to devicePixelRatio == 1.0 so that its raw
+    width()/height() equal its rendered scene dimensions. Callers that need the
+    device pixel ratio should read it from TakenScreenshot.device_pixel_ratio.
+
     https://doc.qt.io/qt-6/qscreen.html#grabWindow
     """
-    pixmap = screen.grabWindow(x=0, y=0).scaled(screen.geometry().size())
+    pixmap = screen.grabWindow(x=0, y=0).scaled(physical_screen_size(screen))
     if pixmap.isNull():
         if is_wayland():
             logger.debug("Wayland detected, using external screenshot tool.")
-            return grab_window_wayland(screen)
+            pixmap = grab_window_wayland(screen)
         else:
             logger.warning("Screen grab returned a null pixmap on non-Wayland session.")
+            return pixmap
+    # Normalize DPR so downstream code (padding, centering, selection) treats
+    # the pixmap as plain physical pixels instead of device-independent ones.
+    pixmap.setDevicePixelRatio(1.0)
     return pixmap
 
 
