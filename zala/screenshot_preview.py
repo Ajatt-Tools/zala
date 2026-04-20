@@ -139,9 +139,9 @@ class ScreenshotPreview(QGraphicsView):
         )
 
         self._scene = QGraphicsScene(self)
-        self._rubber_band = UserSelectionRubberBand(self, opts=opts)
+        self._rubber_band = UserSelectionRubberBand(self, opts=self._opts)
         self._pan_start = None
-        self._help_label = ZalaHelpLabel(self).setup_help_label(self.viewport(), is_visible=opts.show_help)
+        self._help_label = ZalaHelpLabel(self).setup_help_label(self.viewport(), is_visible=self._opts.show_help)
 
         # Set properties
         self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
