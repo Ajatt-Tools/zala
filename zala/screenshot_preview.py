@@ -8,6 +8,7 @@ import enum
 import typing
 from typing import Self
 
+from loguru import logger
 from PyQt6.QtCore import QPoint, QRect, Qt, pyqtSignal
 from PyQt6.QtGui import (
     QKeyEvent,
@@ -236,6 +237,12 @@ class ScreenshotPreview(QGraphicsView):
                 self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
                 self._pan_start = event.pos()
         return super().mouseMoveEvent(event)
+
+    def selection_scene_rect(self) -> QRect:
+        """Scale the rubber band's widget-space geometry to pixmap (physical) coordinates."""
+        scaled = scale_rect(self._rubber_band.geometry(), ratio=self._taken.device_pixel_ratio)
+        logger.debug(f"Selection position: {scaled.x(), scaled.y()}, size: {format_size(scaled.size())}.")
+        return scaled
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         """
