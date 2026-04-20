@@ -11,7 +11,7 @@ import time
 from collections.abc import Callable, Iterable
 from contextlib import contextmanager
 
-from PyQt6.QtCore import Qt, pyqtBoundSignal, pyqtSignal, QRect
+from PyQt6.QtCore import QRect, Qt, pyqtBoundSignal, pyqtSignal
 from PyQt6.QtGui import QBrush, QColor, QPen
 
 from zala.exceptions import ZalaException

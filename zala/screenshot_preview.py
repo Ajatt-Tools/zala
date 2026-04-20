@@ -31,8 +31,8 @@ from PyQt6.QtWidgets import (
 from zala.config import ScreenshotPreviewOpts, ZoomOpts
 from zala.help_label import ZalaHelpLabel
 from zala.rubber_band import UserSelectionRubberBand
-from zala.screenshot import TakenScreenshot, add_padding
-from zala.utils import clamp, make_brush, make_solid_pen, q_emit
+from zala.screenshot import TakenScreenshot, add_padding, format_size
+from zala.utils import clamp, make_brush, make_solid_pen, q_emit, scale_rect
 
 
 @dataclasses.dataclass
