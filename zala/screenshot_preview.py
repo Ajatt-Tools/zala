@@ -38,15 +38,20 @@ from zala.utils import clamp, make_brush, make_solid_pen, q_emit
 class PreviewState:
     """Holds the current zoom and rotation state for the screenshot preview view."""
 
+    base_scale: float = 1.0
     zoom: float = 1.0
     rotation: float = 0.0
+
+    def effective_scale(self) -> float:
+        """Return the actual scale to apply (zoom multiplier times base scale)."""
+        return self.zoom * self.base_scale
 
     def apply(self, view: QGraphicsView) -> QGraphicsView:
         """
         Apply the current zoom and rotation as a single combined transform.
         Rotation is applied first, then scale.
         """
-        view.setTransform(QTransform().rotate(self.rotation).scale(self.zoom, self.zoom))
+        view.setTransform(QTransform().rotate(self.rotation).scale(self.effective_scale(), self.effective_scale()))
         return view
 
     def set_zoom(self, new_scale: float) -> Self:
@@ -117,18 +122,22 @@ class ScreenshotPreview(QGraphicsView):
         opts: ScreenshotPreviewOpts | None = None,
         zoomopts: ZoomOpts | None = None,
     ):
-        """Initialize the preview with the captured screen pixmap and set up the rubber band selection."""
+        """Initialize the preview with the captured screenshot and set up the rubber band selection."""
         super().__init__(parent)
 
         # Assign member variables
         self._opts = opts or ScreenshotPreviewOpts()
         self._zoomopts = zoomopts or ZoomOpts()
-        self._state = PreviewState()
         self._taken = taken
+
+        # The scene holds physical-pixel content.
+        # Base scale = 1/devicePixelRatio ensures that a 100% user zoom (zoom=1.0) fills the logical viewport.
+        self._state = PreviewState(base_scale=1.0 / self._taken.device_pixel_ratio)
         self._padded = add_padding(
             self._taken.pixmap,
             padding_size=max(taken.pixmap.width(), taken.pixmap.height()),
         )
+
         self._scene = QGraphicsScene(self)
         self._rubber_band = UserSelectionRubberBand(self, opts=opts)
         self._pan_start = None
@@ -146,6 +155,9 @@ class ScreenshotPreview(QGraphicsView):
         self._scene.addPixmap(self._padded.pixmap)
         self._pattern_overlay = self._fill_viewport_with_pattern()
         self.setSceneRect(self._padded.pixmap.rect().toRectF())
+        # Apply initial transform so physical-pixel scene renders at logical
+        # size in the viewport (zoom=1.0 means "fit to viewport" at base_scale).
+        self._state.apply(self)
         self._center_on_content()
 
     def _fill_viewport_with_pattern(self) -> QGraphicsRectItem | None:
