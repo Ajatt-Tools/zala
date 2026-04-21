@@ -79,7 +79,7 @@ def repr_screen(screen: QScreen) -> str:
 
 def repr_pixmap(pixmap: QPixmap) -> str:
     """Return a human-readable string describing the pixmap's size."""
-    return f"Pixmap size {pixmap.width()}x{pixmap.height()}."
+    return f"Pixmap size {format_size(pixmap.size())}."
 
 
 def debug_screens(screens: Sequence[QScreen]) -> None:
