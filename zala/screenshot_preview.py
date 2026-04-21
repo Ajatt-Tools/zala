@@ -292,16 +292,16 @@ class ScreenshotPreview(QGraphicsView):
         else:
             q_emit(self.selection_finished, UserSelectionResult(error="Region is too small."))
 
-    def _grab_selected_area(self, rect: QRect) -> QPixmap:
+    def _grab_selected_area(self) -> QPixmap:
         """
-        Grab the selected area from the viewport, excluding the pattern overlay.
+        Grab the rubber band selection from the viewport, excluding the pattern overlay.
 
-        The pattern overlay is hidden before grabbing since it's only for visual feedback.
-        It's not unhidden afterward because the window closes immediately after emission.
+        The overlay is hidden before grabbing and not restored because the window closes immediately.
+        grab() uses widget-space coordinates, not DPR-scaled scene coordinates.
         """
         if self._pattern_overlay:
             self._pattern_overlay.hide()
-        return self.grab(rect)
+        return self.grab(self._rubber_band.geometry())
 
     def _zoom_screenshot_preview(self, event: QWheelEvent) -> None:
         """
