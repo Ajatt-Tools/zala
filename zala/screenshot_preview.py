@@ -177,10 +177,17 @@ class ScreenshotPreview(QGraphicsView):
         )
 
     def _center_on_content(self) -> None:
-        """Center the view on the actual screenshot content, skipping the padding bars."""
+        """
+        Center the view on the screenshot content, skipping the surrounding padding bars.
 
-        center_x = self._padded.padding_size + self._taken.pixmap.width() / 2
-        center_y = self._padded.padding_size + self._taken.pixmap.height() / 2
+        deviceIndependentSize() returns floats, preserving sub-pixel precision for centerOn().
+        The pixmap's DPR is 1.0 (normalized upstream in grab_window), so it equals the physical pixel size.
+
+        Both the pixmap dimensions and padding_size are in physical pixels.
+        """
+        size = self._taken.pixmap.deviceIndependentSize()
+        center_x = self._padded.padding_size + size.width() / 2
+        center_y = self._padded.padding_size + size.height() / 2
         self.centerOn(center_x, center_y)
 
     def _ongoing_action(self) -> ZalaAction:
