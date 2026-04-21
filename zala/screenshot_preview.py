@@ -285,10 +285,16 @@ class ScreenshotPreview(QGraphicsView):
         self._draw_viewport_border()
 
     def _emit_selection_result(self) -> None:
-        """Emit the selection result with the captured pixmap if the region is large enough."""
-        rect = self._rubber_band.geometry()
-        if self._opts.rect_has_sufficient_size(rect):
-            q_emit(self.selection_finished, UserSelectionResult(pixmap=self._grab_selected_area(rect), rect=rect))
+        """
+        Emit the selection result with the captured pixmap if the selected region is large enough.
+
+        The minimum sufficient size check uses DPR-scaled scene coordinates (selection_scene_rect)
+        so that the threshold is in physical pixels.
+        The pixmap is grabbed in widget space (_grab_selected_area).
+        """
+        scene_rect = self.selection_scene_rect()
+        if self._opts.rect_has_sufficient_size(scene_rect):
+            q_emit(self.selection_finished, UserSelectionResult(pixmap=self._grab_selected_area(), rect=scene_rect))
         else:
             q_emit(self.selection_finished, UserSelectionResult(error="Region is too small."))
 
