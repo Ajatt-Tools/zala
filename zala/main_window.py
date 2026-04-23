@@ -5,10 +5,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 from loguru import logger
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import (
-    QCloseEvent,
-    QPixmap,
-)
+from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -19,7 +16,7 @@ from zala.config import ScreenshotPreviewOpts
 from zala.consts import APP_NAME
 from zala.screenshot import TakenScreenshot, repr_pixmap
 from zala.screenshot_preview import ScreenshotPreview, UserSelectionResult
-from zala.utils import q_emit, qconnect, ensure_cursor_restored
+from zala.utils import ensure_cursor_restored, q_emit, qconnect
 
 
 class ZalaSelect(QMainWindow):
@@ -28,7 +25,7 @@ class ZalaSelect(QMainWindow):
     """
 
     _taken: TakenScreenshot
-    _user_selected: UserSelectionResult
+    _selection_result_emitted: bool
 
     selection_finished = pyqtSignal(UserSelectionResult)
 
@@ -41,7 +38,7 @@ class ZalaSelect(QMainWindow):
         """Initialize the selection window with the captured screen and set up the preview widget."""
         super().__init__(parent)
         self.setWindowTitle(APP_NAME)
-        self._user_selected = UserSelectionResult()
+        self._selection_result_emitted = False
         self._taken = screen
         self._set_fullscreen_settings()
         self._init_ui()
@@ -49,11 +46,6 @@ class ZalaSelect(QMainWindow):
         self.setCentralWidget(self._preview)
         qconnect(self._preview.selection_finished, self._handle_selection_finished)
         qconnect(self._preview.selection_aborted, self._handle_selection_aborted)
-
-    @property
-    def user_selection(self) -> QPixmap | None:
-        """Return the pixmap selected by the user, or None if no valid selection was made."""
-        return self._user_selected.pixmap
 
     def _set_fullscreen_settings(self) -> None:
         """Configure the window for frameless, transparent fullscreen display."""
@@ -89,27 +81,34 @@ class ZalaSelect(QMainWindow):
         return super().showFullScreen()
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        """Restore the cursor and emit the selection result when the window closes."""
+        """
+        Restore the cursor and emit an abort if no selection result was emitted yet.
+
+        This is a safety net for unexpected closes (e.g. window manager).
+        Normal closes go through _handle_selection_finished or _handle_selection_aborted,
+        which emit the result before calling close().
+        """
         logger.debug("Zala window is closing.")
         # Restore cursor
         ensure_cursor_restored()
-        if self._user_selected.is_empty():
-            q_emit(self.selection_finished, UserSelectionResult(error="Selection aborted."))
-        else:
-            q_emit(self.selection_finished, self._user_selected)
+        if not self._selection_result_emitted:
+            self._selection_result_emitted = True
+            q_emit(self.selection_finished, UserSelectionResult(error="closed without selection"))
         return super().closeEvent(event)
 
     def _handle_selection_finished(self, selection: UserSelectionResult) -> bool:
-        """Process a completed selection: crop the pixmap if the region is large enough, then close."""
-        self._user_selected = selection
+        """Emit the selection result and close the window."""
         if selection.pixmap:
             logger.debug(f"Selection finished: {repr_pixmap(selection.pixmap)}")
         else:
             logger.debug(selection.error.capitalize())
+        self._selection_result_emitted = True
+        q_emit(self.selection_finished, selection)
         return self.close()  # self.closeEvent() will fire.
 
     def _handle_selection_aborted(self) -> bool:
-        """Handle a canceled selection by recording an abort error and closing the window."""
+        """Emit an abort error and close the window."""
         logger.debug("Region selection aborted.")
-        self._user_selected = UserSelectionResult(error="selection aborted")
+        self._selection_result_emitted = True
+        q_emit(self.selection_finished, UserSelectionResult(error="selection aborted"))
         return self.close()  # self.closeEvent() will fire.
