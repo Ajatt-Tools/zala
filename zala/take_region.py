@@ -11,6 +11,7 @@ from zala.config import ScreenshotPreviewOpts
 from zala.main_window import ZalaSelect
 from zala.screenshot import ZalaScreenshot
 from zala.screenshot_preview import UserSelectionResult
+from zala.utils import qconnect
 
 
 class ZalaTakeScreenRegion:
@@ -51,6 +52,6 @@ class ZalaTakeScreenRegion:
             opts: Configuration options for the preview widget.
         """
         self._sel = ZalaSelect(self._scr.capture_screen(), opts=opts)
-        self._sel.selection_finished.connect(on_finish)
-        self._sel.selection_finished.connect(lambda selection: self._cleanup_selection_window())
+        qconnect(self._sel.selection_finished, on_finish)
+        qconnect(self._sel.selection_finished, lambda selection: self._cleanup_selection_window())
         self._sel.showFullScreen()
