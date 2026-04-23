@@ -82,10 +82,10 @@ class ZalaSelect(QMainWindow):
         https://doc.qt.io/qt-6/qwidget.html#showFullScreen
         """
         logger.debug("Zala window is opening.")
-        QApplication.setOverrideCursor(Qt.CursorShape.CrossCursor)
         geometry = self._taken.screen.geometry()
         self.move(geometry.topLeft())
         self.resize(geometry.size())
+        QApplication.setOverrideCursor(Qt.CursorShape.CrossCursor)
         return super().showFullScreen()
 
     def closeEvent(self, event: QCloseEvent) -> None:
