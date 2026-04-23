@@ -36,6 +36,8 @@ class ZalaTakeScreenRegion:
         """Properly clean up the previous ZalaSelect window."""
         if self._sel is not None:
             logger.debug(f"deleting {self._sel.__class__.__name__} window")
+            # https://doc.qt.io/qt-6/qwidget.html#close
+            self._sel.close()
             self._sel.deleteLater()
             self._sel = None
 
