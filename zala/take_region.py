@@ -53,6 +53,7 @@ class ZalaTakeScreenRegion:
             on_finish: Callback called when selection is complete.
             opts: Configuration options for the preview widget.
         """
+        self._cleanup_selection_window()
         self._sel = ZalaSelect(self._scr.capture_screen(), opts=opts)
         qconnect(self._sel.selection_finished, on_finish)
         qconnect(self._sel.selection_finished, lambda selection: self._cleanup_selection_window())
