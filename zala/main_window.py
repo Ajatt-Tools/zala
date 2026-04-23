@@ -19,7 +19,7 @@ from zala.config import ScreenshotPreviewOpts
 from zala.consts import APP_NAME
 from zala.screenshot import TakenScreenshot, repr_pixmap
 from zala.screenshot_preview import ScreenshotPreview, UserSelectionResult
-from zala.utils import q_emit, qconnect
+from zala.utils import q_emit, qconnect, ensure_cursor_restored
 
 
 class ZalaSelect(QMainWindow):
@@ -92,7 +92,7 @@ class ZalaSelect(QMainWindow):
         """Restore the cursor and emit the selection result when the window closes."""
         logger.debug("Zala window is closing.")
         # Restore cursor
-        QApplication.restoreOverrideCursor()
+        ensure_cursor_restored()
         if self._user_selected.is_empty():
             q_emit(self.selection_finished, UserSelectionResult(error="Selection aborted."))
         else:

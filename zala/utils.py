@@ -13,6 +13,7 @@ from contextlib import contextmanager
 
 from PyQt6.QtCore import QRect, Qt, pyqtBoundSignal, pyqtSignal
 from PyQt6.QtGui import QBrush, QColor, QPen
+from PyQt6.QtWidgets import QApplication
 
 from zala.exceptions import ZalaException
 
@@ -98,3 +99,11 @@ def scale_rect(rect: QRect, *, ratio: float) -> QRect:
         round(rect.width() * ratio),
         round(rect.height() * ratio),
     )
+
+
+def ensure_cursor_restored() -> None:
+    """Safety net: restore the cursor if Zala left it in an override state."""
+    # https://doc.qt.io/qt-6/qguiapplication.html#overrideCursor
+    while QApplication.overrideCursor() is not None:
+        # https://doc.qt.io/qt-6/qguiapplication.html#restoreOverrideCursor
+        QApplication.restoreOverrideCursor()
