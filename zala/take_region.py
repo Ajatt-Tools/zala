@@ -5,6 +5,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 from collections.abc import Callable
 
+from PyQt6.QtWidgets import QMainWindow
 from loguru import logger
 
 from zala.config import ScreenshotPreviewOpts
@@ -12,6 +13,13 @@ from zala.main_window import ZalaSelect
 from zala.screenshot import ZalaScreenshot
 from zala.screenshot_preview import UserSelectionResult
 from zala.utils import qconnect
+
+
+def close_and_delete(window: QMainWindow) -> None:
+    logger.debug(f"deleting {window.__class__.__name__} window")
+    # https://doc.qt.io/qt-6/qwidget.html#close
+    window.close()
+    window.deleteLater()
 
 
 class ZalaTakeScreenRegion:
@@ -34,12 +42,9 @@ class ZalaTakeScreenRegion:
 
     def _cleanup_selection_window(self) -> None:
         """Properly clean up the previous ZalaSelect window."""
-        if self._sel is not None:
-            logger.debug(f"deleting {self._sel.__class__.__name__} window")
-            # https://doc.qt.io/qt-6/qwidget.html#close
-            self._sel.close()
-            self._sel.deleteLater()
+        if (sel := self._sel) is not None:
             self._sel = None
+            close_and_delete(sel)
 
     def select_area(self, on_finish: Callable[[UserSelectionResult], None], opts: ScreenshotPreviewOpts) -> None:
         """
