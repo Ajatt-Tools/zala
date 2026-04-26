@@ -20,9 +20,9 @@ from zala.utils import qconnect
 
 def close_and_delete(window: QMainWindow) -> None:
     """Close a window and schedule it for deletion."""
-    logger.debug(f"deleting {window.__class__.__name__} window")
     # https://doc.qt.io/qt-6/qwidget.html#close
     window.close()
+    logger.debug(f"deleting {window.__class__.__name__} window")
     window.deleteLater()
 
 
