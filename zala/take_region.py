@@ -53,6 +53,15 @@ class ZalaTakeScreenRegion:
             self._sel = None
             close_and_delete(sel)
 
+    def _acquire_lock(self) -> None:
+        if not self._lock.acquire(blocking=False):
+            raise SelectionInProgressError("a region selection is already in progress")
+        logger.debug(f"Lock acquired")
+
+    def _release_lock(self) -> None:
+        self._lock.release()
+        logger.debug(f"Lock released")
+
     def select_area(self, on_finish: Callable[[UserSelectionResult], None], opts: ScreenshotPreviewOpts) -> None:
         """
         Launch a fullscreen selection window for the user to choose a region.
@@ -68,12 +77,11 @@ class ZalaTakeScreenRegion:
         Raises:
             SelectionInProgressError: If another region selection is already in progress.
         """
-        if not self._lock.acquire(blocking=False):
-            raise SelectionInProgressError("a region selection is already in progress")
+        self._acquire_lock()
         with ExitStack() as stack:
             # Auto-release the lock on any non-local exit from this block until
             # ownership is handed off to the signal handler below.
-            stack.callback(self._lock.release)
+            stack.callback(self._release_lock)
             self._cleanup_selection_window()
             self._sel = window = ZalaSelect(self._scr.capture_screen(), opts=opts)
 
@@ -82,8 +90,8 @@ class ZalaTakeScreenRegion:
                 try:
                     on_finish(selection)
                 finally:
-                    self._lock.release()
                     self._cleanup_selection_window()
+                    self._release_lock()
 
             qconnect(window.selection_finished, handle_finished)
             window.showFullScreen()
