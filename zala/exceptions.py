@@ -14,3 +14,9 @@ class CaptureScreenError(ZalaException):
     """Raised when screen capture fails due to system or tool errors."""
 
     pass
+
+
+class SelectionInProgressError(ZalaException):
+    """Raised when select_area() is called while a previous region selection is still active."""
+
+    pass
